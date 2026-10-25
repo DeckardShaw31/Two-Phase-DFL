@@ -1,0 +1,34 @@
+[
+  {
+    "Model": "Ridge_PTO",
+    "Category": "Two-Stage PTO",
+    "Topology": "C1",
+    "ShelfLife_tau": 3,
+    "StockoutRatio_pu_h": 20.0,
+    "NormalizedRegret_pct": 24.675107696043717,
+    "Regret_std": 24.675107696043717,
+    "TotalCost": 12470.242382234956,
+    "RoutingCost": 347.90189999999996,
+    "SpoilageCost": 14.747710227966309,
+    "StockoutCost": 11925.215997695923,
+    "MSE": 11.432546615600586,
+    "MAE": 2.4273314476013184,
+    "TrainTime_sec": 0.006340400024782866
+  },
+  {
+    "Model": "Two-Phase_DFL (Ours)",
+    "Category": "Proposed Method",
+    "Topology": "C1",
+    "ShelfLife_tau": 3,
+    "StockoutRatio_pu_h": 20.0,
+    "NormalizedRegret_pct": 0.0,
+    "Regret_std": 0.0,
+    "TotalCost": 6374.762493866726,
+    "RoutingCost": 418.9962999999999,
+    "SpoilageCost": 0.0,
+    "StockoutCost": 5608.574619293209,
+    "MSE": 35.4439697265625,
+    "MAE": 4.790978908538818,
+    "TrainTime_sec": 864.2909221000155
+  }
+]

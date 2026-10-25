@@ -1,0 +1,277 @@
+{
+  "status": "PASS",
+  "evaluation_mode": "benchmark_operational_audit",
+  "input_predictions_file": "results/benchmark_metrics.csv",
+  "num_models_evaluated": 14,
+  "best_model_by_regret": {
+    "model": "Two-Phase_DFL (Ours)",
+    "category": "Proposed Method",
+    "normalized_regret_pct": 22.27122974054245,
+    "regret_std": 20.653479724068923,
+    "total_cost": 2127.9348986895025,
+    "routing_cost": 468.1284366666667,
+    "spoilage_cost": 5.709533256425961,
+    "stockout_cost": 1468.0529051269002,
+    "cost_breakdown_pct": {
+      "stockout_share": 68.98955912753753,
+      "spoilage_share": 0.2683133426658024,
+      "routing_share": 21.99918977572883
+    },
+    "mse": 6.875698163607428,
+    "mae": 2.063960780482025
+  },
+  "models": [
+    {
+      "model": "Ridge_PTO",
+      "category": "Two-Stage PTO",
+      "normalized_regret_pct": 44.49158280031034,
+      "regret_std": 45.15169692170792,
+      "total_cost": 2400.7652811701814,
+      "routing_cost": 465.25193666666667,
+      "spoilage_cost": 2.9567383040932222,
+      "stockout_cost": 1785.797183310808,
+      "cost_breakdown_pct": {
+        "stockout_share": 74.38449719834227,
+        "spoilage_share": 0.12315815824577604,
+        "routing_share": 19.37931793315061
+      },
+      "mse": 7.046196460723877,
+      "mae": 2.068146228790283
+    },
+    {
+      "model": "ElasticNet_PTO",
+      "category": "Two-Stage PTO",
+      "normalized_regret_pct": 41.03500338394088,
+      "regret_std": 40.03986394166637,
+      "total_cost": 2359.81596620237,
+      "routing_cost": 464.60833,
+      "spoilage_cost": 4.149168113924714,
+      "stockout_cost": 1742.268617882618,
+      "cost_breakdown_pct": {
+        "stockout_share": 73.83069878480543,
+        "spoilage_share": 0.17582591919665377,
+        "routing_share": 19.688328948281924
+      },
+      "mse": 7.260584831237793,
+      "mae": 2.0875403881073
+    },
+    {
+      "model": "RandomForest_PTO",
+      "category": "Two-Stage PTO",
+      "normalized_regret_pct": 34.89639702068409,
+      "regret_std": 32.72016353979504,
+      "total_cost": 2276.695487296591,
+      "routing_cost": 466.0812966666666,
+      "spoilage_cost": 5.073645494453266,
+      "stockout_cost": 1655.3729721576324,
+      "cost_breakdown_pct": {
+        "stockout_share": 72.70945901172169,
+        "spoilage_share": 0.2228513001744404,
+        "routing_share": 20.471832938014206
+      },
+      "mse": 6.51672555860805,
+      "mae": 1.975215783981852
+    },
+    {
+      "model": "GradientBoosting_PTO",
+      "category": "Two-Stage PTO",
+      "normalized_regret_pct": 34.50470162078046,
+      "regret_std": 31.64134212680235,
+      "total_cost": 2271.5838024011155,
+      "routing_cost": 466.5114133333333,
+      "spoilage_cost": 4.732290786573615,
+      "stockout_cost": 1652.4360116552657,
+      "cost_breakdown_pct": {
+        "stockout_share": 72.74378387046974,
+        "spoilage_share": 0.20832560883606746,
+        "routing_share": 20.536834821599808
+      },
+      "mse": 6.004335697724904,
+      "mae": 1.904916663108161
+    },
+    {
+      "model": "LightGBM_PTO",
+      "category": "Two-Stage PTO",
+      "normalized_regret_pct": 35.3032176022305,
+      "regret_std": 33.05634870984761,
+      "total_cost": 2279.312343424077,
+      "routing_cost": 463.5247666666666,
+      "spoilage_cost": 4.649221962550472,
+      "stockout_cost": 1665.6369300277915,
+      "cost_breakdown_pct": {
+        "stockout_share": 73.076291401362,
+        "spoilage_share": 0.20397476352741628,
+        "routing_share": 20.336167090217245
+      },
+      "mse": 6.0050080862100055,
+      "mae": 1.906274747726897
+    },
+    {
+      "model": "LightGBM_Quantile_PTO",
+      "category": "Two-Stage PTO",
+      "normalized_regret_pct": 56.76081825705179,
+      "regret_std": 38.46480931714211,
+      "total_cost": 2714.164142907576,
+      "routing_cost": 460.8210833333334,
+      "spoilage_cost": 5.0556813389748525,
+      "stockout_cost": 1957.4336153117613,
+      "cost_breakdown_pct": {
+        "stockout_share": 72.11920548087562,
+        "spoilage_share": 0.18627028701215181,
+        "routing_share": 16.97837931200705
+      },
+      "mse": 13.784368756400507,
+      "mae": 3.11704647047646
+    },
+    {
+      "model": "SafetyStock_PTO",
+      "category": "Two-Stage PTO",
+      "normalized_regret_pct": 65.96103222437975,
+      "regret_std": 39.04713738236656,
+      "total_cost": 2888.0782154932176,
+      "routing_cost": 462.3797433333332,
+      "spoilage_cost": 4.638535092019322,
+      "stockout_cost": 2110.491135492244,
+      "cost_breakdown_pct": {
+        "stockout_share": 73.07596879372676,
+        "spoilage_share": 0.16060974620201438,
+        "routing_share": 16.009945328103566
+      },
+      "mse": 16.41880226135254,
+      "mae": 3.4226326942443848
+    },
+    {
+      "model": "MLP_PTO",
+      "category": "Two-Stage PTO",
+      "normalized_regret_pct": 33.92321027154718,
+      "regret_std": 30.791861626637186,
+      "total_cost": 2277.289314185697,
+      "routing_cost": 463.1995566666666,
+      "spoilage_cost": 4.138561845089503,
+      "stockout_cost": 1658.2939554602754,
+      "cost_breakdown_pct": {
+        "stockout_share": 72.81876506118155,
+        "spoilage_share": 0.18173193099838314,
+        "routing_share": 20.339952143159966
+      },
+      "mse": 5.862302780151367,
+      "mae": 1.907976746559143
+    },
+    {
+      "model": "TemporalSeqNet_PTO",
+      "category": "Two-Stage PTO",
+      "normalized_regret_pct": 30.40346621719416,
+      "regret_std": 26.57712720193969,
+      "total_cost": 2242.5796775183726,
+      "routing_cost": 466.25752666666665,
+      "spoilage_cost": 5.050505648140844,
+      "stockout_cost": 1629.198038395468,
+      "cost_breakdown_pct": {
+        "stockout_share": 72.6483903661488,
+        "spoilage_share": 0.2252096413238574,
+        "routing_share": 20.791124228086506
+      },
+      "mse": 4.960239887237549,
+      "mae": 1.7034493684768677
+    },
+    {
+      "model": "KNN_SAA",
+      "category": "Two-Stage PTO",
+      "normalized_regret_pct": 42.08971226387612,
+      "regret_std": 38.08138138394837,
+      "total_cost": 2371.604323624632,
+      "routing_cost": 464.0127300000001,
+      "spoilage_cost": 3.767348462509578,
+      "stockout_cost": 1748.566255016854,
+      "cost_breakdown_pct": {
+        "stockout_share": 73.72925734696081,
+        "spoilage_share": 0.15885231887044993,
+        "routing_share": 19.56535183283981
+      },
+      "mse": 7.406559722877246,
+      "mae": 2.1424546717961626
+    },
+    {
+      "model": "DFL_DPO",
+      "category": "End-to-End DFL",
+      "normalized_regret_pct": 40.2049288785925,
+      "regret_std": 37.0521804524413,
+      "total_cost": 2338.47440765373,
+      "routing_cost": 466.2644333333332,
+      "spoilage_cost": 6.999732722830316,
+      "stockout_cost": 1708.6032888139766,
+      "cost_breakdown_pct": {
+        "stockout_share": 73.06487012309346,
+        "spoilage_share": 0.2993290283579962,
+        "routing_share": 19.938829854509805
+      },
+      "mse": 7.955783730163436,
+      "mae": 2.1838164718430275
+    },
+    {
+      "model": "DFL_IntOpt",
+      "category": "End-to-End DFL",
+      "normalized_regret_pct": 37.02288420178681,
+      "regret_std": 32.950638833162266,
+      "total_cost": 2298.7762725598345,
+      "routing_cost": 463.9700266666667,
+      "spoilage_cost": 7.769264568534004,
+      "stockout_cost": 1658.8060576561163,
+      "cost_breakdown_pct": {
+        "stockout_share": 72.16039583569086,
+        "spoilage_share": 0.33797393253421876,
+        "routing_share": 20.183348514816814
+      },
+      "mse": 7.847209871236087,
+      "mae": 2.1758603868368924
+    },
+    {
+      "model": "DFL_SPO+",
+      "category": "End-to-End DFL",
+      "normalized_regret_pct": 28.117404451098484,
+      "regret_std": 25.481937661611585,
+      "total_cost": 2199.2927915239225,
+      "routing_cost": 464.27818,
+      "spoilage_cost": 4.436898406669143,
+      "stockout_cost": 1564.4684759076542,
+      "cost_breakdown_pct": {
+        "stockout_share": 71.13507041614096,
+        "spoilage_share": 0.20174205198002537,
+        "routing_share": 21.11033973235982
+      },
+      "mse": 6.662276822661634,
+      "mae": 2.015761127529751
+    },
+    {
+      "model": "Two-Phase_DFL (Ours)",
+      "category": "Proposed Method",
+      "normalized_regret_pct": 22.27122974054245,
+      "regret_std": 20.653479724068923,
+      "total_cost": 2127.9348986895025,
+      "routing_cost": 468.1284366666667,
+      "spoilage_cost": 5.709533256425961,
+      "stockout_cost": 1468.0529051269002,
+      "cost_breakdown_pct": {
+        "stockout_share": 68.98955912753753,
+        "spoilage_share": 0.2683133426658024,
+        "routing_share": 21.99918977572883
+      },
+      "mse": 6.875698163607428,
+      "mae": 2.063960780482025
+    }
+  ],
+  "ground_truth_summary": {
+    "ground_truth_file": "data/processed/demand_features_test.csv",
+    "total_rows": 1500,
+    "num_instances": 30,
+    "num_stores": 10,
+    "mean_demand": 19.928013333333332,
+    "std_demand": 5.953922565482865
+  },
+  "checks": [
+    "Verified all essential operational cost columns exist",
+    "Calculated exact stockout, spoilage, and routing cost proportions",
+    "Validated non-negativity of regret and cost metrics",
+    "Cross-referenced ground-truth test data configuration"
+  ]
+}

@@ -1,0 +1,15 @@
+[
+  {
+    "Baseline_Model": "Ridge_PTO",
+    "Ours_Model": "Two-Phase_DFL (Ours)",
+    "Mean_Regret_Baseline_pct": 24.675107696043717,
+    "Mean_Regret_Ours_pct": 0.0,
+    "Mean_Difference_pct": 24.675107696043717,
+    "Wilcoxon_Stat": 1.0,
+    "Wilcoxon_p_value": 0.5,
+    "T_Stat": 1.0,
+    "T_p_value": 0.24999999999999978,
+    "Significant_p05": false,
+    "Significant_p01": false
+  }
+]

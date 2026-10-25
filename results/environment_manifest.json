@@ -1,0 +1,49 @@
+{
+  "timestamp_utc": "2026-10-25T17:15:58.489637+00:00",
+  "platform": {
+    "system": "Windows",
+    "release": "11",
+    "version": "10.0.26200",
+    "machine": "AMD64",
+    "processor": "Intel64 Family 6 Model 197 Stepping 2, GenuineIntel",
+    "python_executable": "C:\\Users\\proin\\AppData\\Local\\Programs\\Python\\Python313\\python.exe"
+  },
+  "packages": {
+    "python": "3.13.11",
+    "torch": "2.10.0+cpu",
+    "scipy": "1.16.3",
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "scikit-learn": "1.6.1",
+    "lightgbm": "4.6.0"
+  },
+  "hardware": {
+    "cpu_count_logical": 16,
+    "torch_num_threads": 16,
+    "cuda_available": false,
+    "cuda_device_count": 0
+  },
+  "pirp_parameters": {
+    "store_capacity_Ci": 70,
+    "aging_surcharge_eps": 0.01,
+    "vehicle_capacity_Q": 100,
+    "shelf_life_tau": 3,
+    "stockout_penalty_pu": 20.0,
+    "spoilage_penalty_ps": 5.0,
+    "holding_cost_h": 1.0,
+    "horizon_T": 5,
+    "num_stores": 10
+  },
+  "experiment_configuration": {
+    "seeds": [
+      42,
+      1042,
+      2042,
+      3042,
+      4042
+    ],
+    "num_test_instances": 30,
+    "num_models": 14,
+    "dfl_epochs": 1500
+  }
+}
