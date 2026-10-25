@@ -110,10 +110,6 @@ Two-Phase-DFL/
 │   ├── epoch_convergence_history.csv  # Epoch-by-epoch training and validation loss curves
 │   └── environment_manifest.json      # Complete hardware, software, and seed configuration
 ├── tests/                             # 15 test suites with 150 automated test cases
-├── paper/
-│   ├── manuscript.tex                 # Complete LaTeX manuscript with theoretical proofs
-│   ├── references.bib                 # Comprehensive bibliography with validated DOIs
-│   └── manuscript.pdf                 # Compiled PDF manuscript
 ├── requirements.txt                   # Python package dependencies
 ├── pyproject.toml                     # Project packaging and linting configuration
 └── README.md                          # Project documentation

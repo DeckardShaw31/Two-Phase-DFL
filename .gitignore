@@ -24,15 +24,8 @@ ORIGINAL_REQUEST.md
 plan.md
 plan_brainstorm.md
 
-# LaTeX Auxiliary Build Files (keep .tex, .bib, and .pdf)
-paper/*.aux
-paper/*.bbl
-paper/*.blg
-paper/*.fdb_latexmk
-paper/*.fls
-paper/*.log
-paper/*.out
-paper/*.synctex.gz
+# Manuscript and LaTeX directory
+paper/
 
 # OS-generated files
 .DS_Store
