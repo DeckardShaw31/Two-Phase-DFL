@@ -1,11 +1,14 @@
 import sys
-sys.path.insert(0, ".")
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 import numpy as np
-import pandas as pd
+
 from src.experiments.run_benchmark import load_dataset, structure_instances
+from src.models.baselines import LightGBMPTO, RidgePTO
 from src.optimization.pirp_model import solve_pirp
-from src.utils.metrics import evaluate_decisions_under_true_demand, compute_decision_regret
-from src.models.baselines import RidgePTO, LightGBMPTO
+from src.utils.metrics import compute_decision_regret, evaluate_decisions_under_true_demand
 
 df_train, df_val, df_test, config, dist_matrix, feat_cols = load_dataset()
 N, T = config['num_stores'], config['horizon_T']

@@ -12,13 +12,9 @@ in paper/manuscript.tex against experimental output files in results/:
   - results/figures/*.png
 """
 
-import os
-import re
 import sys
 from pathlib import Path
-from typing import Any
 
-import numpy as np
 import pandas as pd
 
 WORKSPACE_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -165,9 +161,15 @@ def audit_manuscript_parity() -> tuple[bool, list[str]]:
                 r_val_pct = f"{r_val_raw}%"
                 r_val_tex = f"{r_val_raw}\\%"
                 c_val = f"{grouped.loc[m, 'TotalCost']:.2f}"
+                c_val_comma = f"{grouped.loc[m, 'TotalCost']:,.2f}"
                 s_val = f"{grouped.loc[m, 'StockoutCost']:.2f}"
+                s_val_comma = f"{grouped.loc[m, 'StockoutCost']:,.2f}"
                 if r_val_tex not in tex and r_val_pct not in tex and r_val_raw not in tex:
                     errors.append(f"Table 8: Regret {r_val_pct} for {m} at gamma={gamma_val} not in manuscript.")
+                if c_val not in tex and c_val_comma not in tex:
+                    errors.append(f"Table 8: Total cost {c_val} for {m} at gamma={gamma_val} not in manuscript.")
+                if s_val not in tex and s_val_comma not in tex:
+                    errors.append(f"Table 8: Stockout cost {s_val} for {m} at gamma={gamma_val} not in manuscript.")
 
         checks.append("Table 7 & Table 8 (Sensitivity & Capacity regimes) numerical parity 100% verified.")
 
