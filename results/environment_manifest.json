@@ -1,21 +1,21 @@
 {
-  "timestamp_utc": "2026-10-25T17:15:58.489637+00:00",
+  "timestamp_utc": "2026-10-26T02:22:39.251234+00:00",
   "platform": {
     "system": "Windows",
     "release": "11",
     "version": "10.0.26200",
     "machine": "AMD64",
     "processor": "Intel64 Family 6 Model 197 Stepping 2, GenuineIntel",
-    "python_executable": "C:\\Users\\proin\\AppData\\Local\\Programs\\Python\\Python313\\python.exe"
+    "python_executable": "C:\\Users\\proin\\Desktop\\NCKH\\Q1\\End-to-End Decision-Focused Learning for Perishable Inventory-Routing under Asymmetric Spoilage and Stockout Costs\\.venv\\Scripts\\python.exe"
   },
   "packages": {
-    "python": "3.13.11",
-    "torch": "2.10.0+cpu",
-    "scipy": "1.16.3",
-    "numpy": "2.2.6",
-    "pandas": "2.3.3",
-    "scikit-learn": "1.6.1",
-    "lightgbm": "4.6.0"
+    "python": "3.12.9",
+    "torch": "2.14.1+cpu",
+    "scipy": "1.18.1",
+    "numpy": "2.5.4",
+    "pandas": "3.1.0",
+    "scikit-learn": "1.9.1",
+    "lightgbm": "4.7.0"
   },
   "hardware": {
     "cpu_count_logical": 16,

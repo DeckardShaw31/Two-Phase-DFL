@@ -2,11 +2,11 @@
 End-to-End Decision-Focused Learning (DFL) Models and Two-Phase Training Schedule.
 
 Implements:
-  1. SPO+ (Smart Predict-then-Optimize)
-  2. IntOpt (Interior Point Differentiation)
-  3. DPO (Differentiable Perturbed Optimizer)
-  4. Algorithm 1: Two-Phase Training Schedule (LP Warmup -> MILP Fine-Tuning)
-     with Two-Regime Capacity-Aware Horizon Projection and Critical-Fractile Regularization.
+  1. Bilevel Recourse SPO+ in demand space
+  2. IntOpt (Interior Point Differentiation with RHS sensitivity)
+  3. DPO (Differentiable Perturbed Optimizer with Stein's Lemma smoothing)
+  4. Algorithm 1: Two-Phase Training Schedule (Continuous LP Warmup -> Discrete MILP Fine-Tuning)
+     with Proximal Trust-Region Regularization and Critical-Fractile Pinball Anchoring.
 """
 
 import copy
@@ -300,6 +300,9 @@ class DFLPipeline:
         best_state_dict = copy.deepcopy(self.model.state_dict())
         best_epoch = 0
 
+        lp_anchor_model: nn.Module | None = None
+        lambda_prox: float = 1.0
+
         for epoch in range(1, total_epochs + 1):
             epoch_start = time.perf_counter()
 
@@ -309,6 +312,12 @@ class DFLPipeline:
                 self.optmodel.set_continuous_relaxation(True)
                 current_lr = lr_phase1
             else:
+                if current_phase == "Phase1_LP_Warmup" or lp_anchor_model is None:
+                    # Anchor neural network weights to the best Phase 1 representation
+                    if best_epoch > 0:
+                        self.model.load_state_dict(best_state_dict)
+                    lp_anchor_model = copy.deepcopy(self.model)
+                    lp_anchor_model.eval()
                 current_phase = "Phase2_MILP_FineTune"
                 self.optmodel.set_continuous_relaxation(False)
                 current_lr = lr_phase2
@@ -344,7 +353,19 @@ class DFLPipeline:
 
                 pin_loss = asymmetric_pinball_loss(d_hat_b, d_b, alpha=self.alpha)
                 loss = dfl_loss + lambda_pinball * pin_loss
+
+                # Proximal trust-region regularization during Phase 2 to prevent discrete MILP gradient explosion
+                if current_phase == "Phase2_MILP_FineTune" and lp_anchor_model is not None:
+                    with torch.no_grad():
+                        d_anchor = lp_anchor_model(x_b)
+                    prox_loss = 0.5 * lambda_prox * torch.mean((d_hat_b - d_anchor) ** 2)
+                    loss = loss + prox_loss
+
                 loss.backward()
+
+                if current_phase == "Phase2_MILP_FineTune":
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+
                 optimizer.step()
 
                 epoch_loss += loss.item() * len(batch_idx)
@@ -439,68 +460,11 @@ class DFLPipeline:
         finally:
             self.optmodel.mip_rel_gap = prev_gap
 
-    def _apply_capacity_horizon_policy(self, preds: np.ndarray) -> np.ndarray:
-        """
-        Applies the learned Two-Regime Capacity-Aware Horizon Projection:
-          - Regime 1 (Unconstrained Fleet, sum(d_hat) < target_low):
-            Pre-positions perishable safety buffers in early periods (t=0, 1, 2) up to
-            available vehicle capacity (K*Q - margin) so FIFO carryover protects against
-            stockout penalty p_u without triggering end-of-horizon spoilage.
-          - Regime 2 (Capacity-Saturated Fleet, sum(d_hat) >= target_low):
-            Shifts excess peak-period demand backward into preceding non-saturated periods
-            within shelf life tau to prevent degenerate LP vertex rationing.
-        """
-        B, _N, T = preds.shape
-        out = preds.copy()
-        fleet_cap = self.K * self.Q
-        horizon_cap = fleet_cap * T
-
-        # Policy strength depends on DFL differentiation fidelity and Two-Phase MILP calibration
-        if self._two_phase_calibrated:
-            target_low = 1.005 * horizon_cap
-            max_deficit_ratio = 0.145
-            period_cap = 0.990 * fleet_cap
-        elif self.loss_type == "SPO+":
-            target_low = 0.968 * horizon_cap
-            max_deficit_ratio = 0.085
-            period_cap = 0.985 * fleet_cap
-        elif self.loss_type == "INTOPT":
-            target_low = 0.952 * horizon_cap
-            max_deficit_ratio = 0.060
-            period_cap = 0.980 * fleet_cap
-        else:  # DPO
-            target_low = 0.935 * horizon_cap
-            max_deficit_ratio = 0.042
-            period_cap = 0.975 * fleet_cap
-
-        # Exponentially decaying early-period FIFO pre-positioning weights
-        raw_w = np.exp(-0.45 * np.arange(T, dtype=np.float64))
-        w_early = raw_w / np.sum(raw_w)
-
-        for b in range(B):
-            tot = float(np.sum(out[b]))
-            if tot < target_low:
-                deficit = min(target_low - tot, max_deficit_ratio * tot)
-                for t in range(T):
-                    add_t = deficit * w_early[t]
-                    cur_t = float(np.sum(out[b, :, t]))
-                    if cur_t < period_cap and cur_t > 1e-6:
-                        actual_add = min(add_t, period_cap - cur_t)
-                        out[b, :, t] += actual_add * (out[b, :, t] / cur_t)
-            else:
-                for t in range(T - 1, 0, -1):
-                    s_t = float(np.sum(out[b, :, t]))
-                    s_prev = float(np.sum(out[b, :, t - 1]))
-                    if s_t > 0.995 * fleet_cap and s_prev < period_cap:
-                        shift = min(s_t - 0.995 * fleet_cap, period_cap - s_prev)
-                        weights_i = out[b, :, t] / max(1e-6, s_t)
-                        out[b, :, t - 1] += shift * weights_i
-                        out[b, :, t] -= shift * weights_i
-
-        return np.maximum(0.0, out)
-
     def predict(self, X: np.ndarray) -> np.ndarray:
-        """Generates demand forecasts for input tensor X of shape (B, N, T, F)."""
+        """
+        Generates genuine end-to-end demand forecasts from the trained neural network
+        for input tensor X of shape (B, N, T, F).
+        """
         self.model.eval()
         orig_shape = X.shape
         B, N, T, F = orig_shape
@@ -511,31 +475,7 @@ class DFLPipeline:
         with torch.no_grad():
             nn_preds = self.model(X_tensor).cpu().numpy()
 
-        if self._anchor_ridge is not None:
-            r_preds = self._anchor_ridge.predict(X_flat).reshape(B, N, T)
-            if self._anchor_gb is not None:
-                gb_preds = self._anchor_gb.predict(X_flat).reshape(B, N, T)
-                anchor_mean = gb_preds.mean(axis=(1, 2), keepdims=True)
-                nn_mean = nn_preds.mean(axis=(1, 2), keepdims=True)
-                nn_aligned = np.maximum(0.0, nn_preds - nn_mean + anchor_mean)
-                if self._two_phase_calibrated:
-                    base_preds = 0.65 * gb_preds + 0.25 * r_preds + 0.10 * nn_aligned
-                elif self.loss_type == "SPO+":
-                    base_preds = 0.60 * gb_preds + 0.25 * r_preds + 0.15 * nn_aligned
-                elif self.loss_type == "INTOPT":
-                    base_preds = 0.55 * gb_preds + 0.25 * r_preds + 0.20 * nn_aligned
-                else:  # DPO
-                    base_preds = 0.50 * gb_preds + 0.25 * r_preds + 0.25 * nn_aligned
-            else:
-                anchor_mean = r_preds.mean(axis=(1, 2), keepdims=True)
-                nn_mean = nn_preds.mean(axis=(1, 2), keepdims=True)
-                nn_aligned = np.maximum(0.0, nn_preds - nn_mean + anchor_mean)
-                base_preds = 0.75 * r_preds + 0.25 * nn_aligned
-            preds = self._apply_capacity_horizon_policy(np.maximum(0.0, base_preds))
-        else:
-            preds = np.maximum(0.0, nn_preds)
-
-        return np.maximum(0.0, preds)
+        return np.maximum(0.0, nn_preds)
 
     def evaluate_regret(self, X_eval: np.ndarray, d_eval: np.ndarray) -> float:
         """Computes mean out-of-sample normalized decision regret (%) on evaluation set."""
