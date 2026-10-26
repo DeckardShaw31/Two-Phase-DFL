@@ -242,6 +242,7 @@ def evaluate_model_decisions(
             p_s=ps,
             p_u=pu,
             tau=tau,
+            store_capacity_Ci=Ci,
         )
         abs_regret, norm_regret = compute_decision_regret(eval_metrics["total_cost"], oracle_costs[i])
         regrets.append(norm_regret)

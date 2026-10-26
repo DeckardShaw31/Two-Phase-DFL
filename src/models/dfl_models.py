@@ -515,6 +515,7 @@ class DFLPipeline:
                 p_s=self.ps,
                 p_u=self.pu,
                 tau=self.tau,
+                store_capacity_Ci=self.Ci,
             )
             model_realized_cost = eval_metrics["total_cost"]
 

@@ -94,6 +94,7 @@ def evaluate_single_instance(
             p_s=ps,
             p_u=pu,
             tau=tau,
+            store_capacity_Ci=Ci,
         )
         _, norm_regret = compute_decision_regret(metrics_m["total_cost"], c_oracle)
         instance_res[m_name] = {

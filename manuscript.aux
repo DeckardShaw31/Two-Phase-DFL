@@ -1,0 +1,349 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{nahmias1982perishable,coelho2014optimal,amorim2012multiobjective}
+\citation{soysal2015modeling,liu2021sustainable}
+\citation{bertazzi2013stochastic,archetti2018stochastic}
+\citation{elmachtoub2022smart,mandi2024decision}
+\citation{ke2017lightgbm}
+\citation{lim2021temporal}
+\citation{coelho2014thirty,alvarez2020formulations}
+\citation{elmachtoub2022smart,sadana2025survey}
+\citation{solomon1987algorithms,miller1960integer}
+\citation{bertsimas2020predictive,ban2019big}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{2}{section.1}\protected@file@percent }
+\newlabel{sec:introduction}{{1}{2}{Introduction}{section.1}{}}
+\newlabel{sec:introduction@cref}{{[section][1][]1}{[1][2][]2}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.1}The Methodological Failure of Two-Stage PTO in Perishable Operations}{2}{subsection.1.1}\protected@file@percent }
+\citation{elmachtoub2022smart,mandi2020interior,tang2024pyepo}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.2}Research Questions and Contributions}{3}{subsection.1.2}\protected@file@percent }
+\citation{bengio2021machine,sadana2025survey}
+\citation{elmachtoub2022smart}
+\citation{amos2017optnet}
+\citation{agrawal2019differentiable}
+\citation{wilder2019melding}
+\citation{mandi2020interior}
+\citation{berthet2020learning}
+\citation{pogancic2020differentiation}
+\citation{tang2024pyepo}
+\citation{mandi2024decision}
+\citation{sadana2025survey}
+\citation{bertsimas2020predictive}
+\citation{ban2019big}
+\citation{im2025smart}
+\@writefile{toc}{\contentsline {section}{\numberline {2}Literature Review and Methodological Positioning}{4}{section.2}\protected@file@percent }
+\newlabel{sec:literature}{{2}{4}{Literature Review and Methodological Positioning}{section.2}{}}
+\newlabel{sec:literature@cref}{{[section][2][]2}{[1][4][]4}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Predict-then-Optimize and Decision-Focused Learning}{4}{subsection.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Contextual Optimization under Constraint and RHS Uncertainty}{4}{subsection.2.2}\protected@file@percent }
+\citation{federgruen1984combined,coelho2014thirty}
+\citation{nahmias1982perishable,amorim2014rich}
+\citation{federgruen1986allocation}
+\citation{coelho2014optimal}
+\citation{archetti2018stochastic}
+\citation{alvarez2020formulations}
+\citation{soysal2015modeling}
+\citation{liu2021sustainable}
+\citation{coelho2014optimal}
+\citation{archetti2018stochastic}
+\citation{alvarez2020formulations}
+\citation{soysal2015modeling}
+\citation{bertsimas2020predictive}
+\citation{ban2019big}
+\citation{elmachtoub2022smart}
+\citation{wilder2019melding}
+\citation{mandi2020interior}
+\citation{berthet2020learning}
+\citation{im2025smart}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Perishable Inventory-Routing Problems (PIRP)}{5}{subsection.2.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Methodological Positioning}{5}{subsection.2.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Methodological Positioning: Comparing Our Work against Relevant Literature.}}{5}{table.caption.1}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{tab:positioning}{{1}{5}{Methodological Positioning: Comparing Our Work against Relevant Literature}{table.caption.1}{}}
+\newlabel{tab:positioning@cref}{{[table][1][]1}{[1][5][]5}{}{}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}Mathematical Formulation and Bilevel Recourse Reformulation}{6}{section.3}\protected@file@percent }
+\newlabel{sec:formulation}{{3}{6}{Mathematical Formulation and Bilevel Recourse Reformulation}{section.3}{}}
+\newlabel{sec:formulation@cref}{{[section][3][]3}{[1][5][]6}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Sets, Indices, Physical Parameters, and Notation Table}{6}{subsection.3.1}\protected@file@percent }
+\newlabel{subsec:notation}{{3.1}{6}{Sets, Indices, Physical Parameters, and Notation Table}{subsection.3.1}{}}
+\newlabel{subsec:notation@cref}{{[subsection][1][3]3.1}{[1][5][]6}{}{}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Comprehensive Mathematical Notation for the Multi-Period Perishable Inventory-Routing Problem (PIRP).}}{7}{table.caption.2}\protected@file@percent }
+\newlabel{tab:notation}{{2}{7}{Comprehensive Mathematical Notation for the Multi-Period Perishable Inventory-Routing Problem (PIRP)}{table.caption.2}{}}
+\newlabel{tab:notation@cref}{{[table][2][]2}{[1][6][]7}{}{}{}}
+\@writefile{toc}{\contentsline {paragraph}{Within-Period Operational Sequence of Events:}{7}{section*.3}\protected@file@percent }
+\citation{nahmias1982perishable,coelho2014optimal}
+\@writefile{toc}{\contentsline {paragraph}{Age-Differentiated Holding Costs:}{8}{section*.4}\protected@file@percent }
+\newlabel{eq:age_holding_costs}{{1}{8}{Age-Differentiated Holding Costs:}{equation.1}{}}
+\newlabel{eq:age_holding_costs@cref}{{[equation][1][]1}{[1][8][]8}{}{}{}}
+\@writefile{toc}{\contentsline {paragraph}{Uncapacitated Cross-Dock Central Depot Assumption:}{8}{section*.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Decision Variables}{8}{subsection.3.2}\protected@file@percent }
+\citation{nahmias1982perishable,coelho2014optimal}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}FIFO Perishable Inventory Dynamics and Optimality Proof}{9}{subsection.3.3}\protected@file@percent }
+\newlabel{sec:fifo_dynamics}{{3.3}{9}{FIFO Perishable Inventory Dynamics and Optimality Proof}{subsection.3.3}{}}
+\newlabel{sec:fifo_dynamics@cref}{{[subsection][3][3]3.3}{[1][9][]9}{}{}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.1}Inventory Conservation and Balance Constraints}{9}{subsubsection.3.3.1}\protected@file@percent }
+\newlabel{eq:avail_fresh}{{2}{9}{Inventory Conservation and Balance Constraints}{equation.2}{}}
+\newlabel{eq:avail_fresh@cref}{{[equation][2][]2}{[1][9][]9}{}{}{}}
+\newlabel{eq:avail_inter}{{3}{9}{Inventory Conservation and Balance Constraints}{equation.3}{}}
+\newlabel{eq:avail_inter@cref}{{[equation][3][]3}{[1][9][]9}{}{}{}}
+\newlabel{eq:demand_satisfaction}{{4}{9}{Inventory Conservation and Balance Constraints}{equation.4}{}}
+\newlabel{eq:demand_satisfaction@cref}{{[equation][4][]4}{[1][9][]9}{}{}{}}
+\newlabel{eq:w_bounds}{{5}{9}{Inventory Conservation and Balance Constraints}{equation.5}{}}
+\newlabel{eq:w_bounds@cref}{{[equation][5][]5}{[1][9][]9}{}{}{}}
+\newlabel{eq:fresh_inv}{{6}{9}{Inventory Conservation and Balance Constraints}{equation.6}{}}
+\newlabel{eq:fresh_inv@cref}{{[equation][6][]6}{[1][9][]9}{}{}{}}
+\newlabel{eq:inter_inv}{{7}{9}{Inventory Conservation and Balance Constraints}{equation.7}{}}
+\newlabel{eq:inter_inv@cref}{{[equation][7][]7}{[1][9][]9}{}{}{}}
+\newlabel{eq:spoilage_inv}{{8}{9}{Inventory Conservation and Balance Constraints}{equation.8}{}}
+\newlabel{eq:spoilage_inv@cref}{{[equation][8][]8}{[1][9][]9}{}{}{}}
+\newlabel{eq:total_disposal}{{9}{9}{Inventory Conservation and Balance Constraints}{equation.9}{}}
+\newlabel{eq:total_disposal@cref}{{[equation][9][]9}{[1][9][]9}{}{}{}}
+\newlabel{eq:terminal_inv}{{10}{9}{Inventory Conservation and Balance Constraints}{equation.10}{}}
+\newlabel{eq:terminal_inv@cref}{{[equation][10][]10}{[1][9][]9}{}{}{}}
+\newlabel{eq:store_capacity}{{11}{9}{Inventory Conservation and Balance Constraints}{equation.11}{}}
+\newlabel{eq:store_capacity@cref}{{[equation][11][]11}{[1][9][]9}{}{}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.2}Formal FIFO Consumption Discipline}{10}{subsubsection.3.3.2}\protected@file@percent }
+\newlabel{def:fifo_discipline}{{1}{10}{FIFO Consumption Discipline}{definition.1}{}}
+\newlabel{def:fifo_discipline@cref}{{[definition][1][]1}{[1][9][]10}{}{}{}}
+\newlabel{eq:fifo_implication}{{12}{10}{FIFO Consumption Discipline}{equation.12}{}}
+\newlabel{eq:fifo_implication@cref}{{[equation][12][]12}{[1][10][]10}{}{}{}}
+\newlabel{eq:fifo_complementarity}{{13}{10}{FIFO Consumption Discipline}{equation.13}{}}
+\newlabel{eq:fifo_complementarity@cref}{{[equation][13][]13}{[1][10][]10}{}{}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.3}Optimality Proof for FIFO Consumption}{10}{subsubsection.3.3.3}\protected@file@percent }
+\newlabel{lem:fifo_optimality}{{1}{10}{Optimal FIFO Consumption}{lemma.1}{}}
+\newlabel{lem:fifo_optimality@cref}{{[lemma][1][]1}{[1][10][]10}{}{}{}}
+\@writefile{toc}{\contentsline {paragraph}{1. Feasibility Verification:}{10}{section*.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{2. Cost Difference Analysis:}{11}{section*.7}\protected@file@percent }
+\newlabel{rem:simplex_degeneracy}{{1}{11}{Breaking Simplex Basis Degeneracy}{remark.1}{}}
+\newlabel{rem:simplex_degeneracy@cref}{{[remark][1][]1}{[1][11][]11}{}{}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.4}Post-Decision FIFO Evaluation Simulator}{12}{subsubsection.3.3.4}\protected@file@percent }
+\@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces Post-Decision FIFO Perishable Inventory Evaluation Simulator}}{13}{algorithm.1}\protected@file@percent }
+\newlabel{alg:fifo_simulator}{{1}{13}{Post-Decision FIFO Perishable Inventory Evaluation Simulator}{algorithm.1}{}}
+\newlabel{alg:fifo_simulator@cref}{{[algorithm][1][]1}{[1][12][]13}{}{}{}}
+\citation{miller1960integer}
+\citation{elmachtoub2022smart}
+\citation{mandi2020interior}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Fleet Routing, Operational Constraints, and Solver Execution Modes}{14}{subsection.3.4}\protected@file@percent }
+\newlabel{subsec:routing_constraints}{{3.4}{14}{Fleet Routing, Operational Constraints, and Solver Execution Modes}{subsection.3.4}{}}
+\newlabel{subsec:routing_constraints@cref}{{[subsection][4][3]3.4}{[1][13][]14}{}{}{}}
+\newlabel{eq:depot_depart}{{14}{14}{Fleet Routing, Operational Constraints, and Solver Execution Modes}{equation.14}{}}
+\newlabel{eq:depot_depart@cref}{{[equation][14][]14}{[1][13][]14}{}{}{}}
+\newlabel{eq:flow_cons}{{15}{14}{Fleet Routing, Operational Constraints, and Solver Execution Modes}{equation.15}{}}
+\newlabel{eq:flow_cons@cref}{{[equation][15][]15}{[1][13][]14}{}{}{}}
+\newlabel{eq:depot_return}{{16}{14}{Fleet Routing, Operational Constraints, and Solver Execution Modes}{equation.16}{}}
+\newlabel{eq:depot_return@cref}{{[equation][16][]16}{[1][13][]14}{}{}{}}
+\newlabel{eq:visit_link}{{17}{14}{Fleet Routing, Operational Constraints, and Solver Execution Modes}{equation.17}{}}
+\newlabel{eq:visit_link@cref}{{[equation][17][]17}{[1][13][]14}{}{}{}}
+\newlabel{eq:veh_capacity}{{18}{14}{Fleet Routing, Operational Constraints, and Solver Execution Modes}{equation.18}{}}
+\newlabel{eq:veh_capacity@cref}{{[equation][18][]18}{[1][13][]14}{}{}{}}
+\newlabel{eq:visit_depot_link}{{19}{14}{Fleet Routing, Operational Constraints, and Solver Execution Modes}{equation.19}{}}
+\newlabel{eq:visit_depot_link@cref}{{[equation][19][]19}{[1][13][]14}{}{}{}}
+\newlabel{eq:single_visit}{{20}{14}{Fleet Routing, Operational Constraints, and Solver Execution Modes}{equation.20}{}}
+\newlabel{eq:single_visit@cref}{{[equation][20][]20}{[1][13][]14}{}{}{}}
+\newlabel{eq:sym_break}{{21}{14}{Fleet Routing, Operational Constraints, and Solver Execution Modes}{equation.21}{}}
+\newlabel{eq:sym_break@cref}{{[equation][21][]21}{[1][13][]14}{}{}{}}
+\newlabel{eq:mtz_subtour}{{22}{14}{Fleet Routing, Operational Constraints, and Solver Execution Modes}{equation.22}{}}
+\newlabel{eq:mtz_subtour@cref}{{[equation][22][]22}{[1][13][]14}{}{}{}}
+\newlabel{eq:mtz_bounds}{{23}{14}{Fleet Routing, Operational Constraints, and Solver Execution Modes}{equation.23}{}}
+\newlabel{eq:mtz_bounds@cref}{{[equation][23][]23}{[1][13][]14}{}{}{}}
+\@writefile{toc}{\contentsline {paragraph}{Solver Execution Modes:}{14}{section*.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Two-Stage Recourse Decomposition and Bilevel Dual Subgradients}{14}{subsection.3.5}\protected@file@percent }
+\newlabel{sec:recourse_decomposition}{{3.5}{14}{Two-Stage Recourse Decomposition and Bilevel Dual Subgradients}{subsection.3.5}{}}
+\newlabel{sec:recourse_decomposition@cref}{{[subsection][5][3]3.5}{[1][14][]14}{}{}{}}
+\newlabel{sec:bilevel_recourse}{{3.5}{14}{Two-Stage Recourse Decomposition and Bilevel Dual Subgradients}{subsection.3.5}{}}
+\newlabel{sec:bilevel_recourse@cref}{{[subsection][5][3]3.5}{[1][14][]14}{}{}{}}
+\newlabel{def:w1_set}{{2}{15}{First-Stage Feasible Decision Set $\mathcal {W}_1$}{definition.2}{}}
+\newlabel{def:w1_set@cref}{{[definition][2][]2}{[1][15][]15}{}{}{}}
+\newlabel{eq:w1_store_cap}{{24}{15}{First-Stage Feasible Decision Set $\mathcal {W}_1$}{equation.24}{}}
+\newlabel{eq:w1_store_cap@cref}{{[equation][24][]24}{[1][15][]15}{}{}{}}
+\newlabel{def:w2_set}{{3}{15}{Second-Stage Recourse Feasible Set $\mathcal {W}_2(\mathbf {q}, \tilde {d})$}{definition.3}{}}
+\newlabel{def:w2_set@cref}{{[definition][3][]3}{[1][15][]15}{}{}{}}
+\newlabel{eq:w2_demand}{{25}{15}{Second-Stage Recourse Feasible Set $\mathcal {W}_2(\mathbf {q}, \tilde {d})$}{equation.25}{}}
+\newlabel{eq:w2_demand@cref}{{[equation][25][]25}{[1][15][]15}{}{}{}}
+\newlabel{eq:w2_fresh}{{26}{15}{Second-Stage Recourse Feasible Set $\mathcal {W}_2(\mathbf {q}, \tilde {d})$}{equation.26}{}}
+\newlabel{eq:w2_fresh@cref}{{[equation][26][]26}{[1][15][]15}{}{}{}}
+\newlabel{eq:w2_inter}{{27}{15}{Second-Stage Recourse Feasible Set $\mathcal {W}_2(\mathbf {q}, \tilde {d})$}{equation.27}{}}
+\newlabel{eq:w2_inter@cref}{{[equation][27][]27}{[1][15][]15}{}{}{}}
+\newlabel{eq:w2_spoilage}{{28}{15}{Second-Stage Recourse Feasible Set $\mathcal {W}_2(\mathbf {q}, \tilde {d})$}{equation.28}{}}
+\newlabel{eq:w2_spoilage@cref}{{[equation][28][]28}{[1][15][]15}{}{}{}}
+\newlabel{eq:w2_total_disposal}{{29}{15}{Second-Stage Recourse Feasible Set $\mathcal {W}_2(\mathbf {q}, \tilde {d})$}{equation.29}{}}
+\newlabel{eq:w2_total_disposal@cref}{{[equation][29][]29}{[1][15][]15}{}{}{}}
+\newlabel{eq:w2_store_cap}{{30}{15}{Second-Stage Recourse Feasible Set $\mathcal {W}_2(\mathbf {q}, \tilde {d})$}{equation.30}{}}
+\newlabel{eq:w2_store_cap@cref}{{[equation][30][]30}{[1][15][]15}{}{}{}}
+\newlabel{eq:w2_bounds}{{31}{15}{Second-Stage Recourse Feasible Set $\mathcal {W}_2(\mathbf {q}, \tilde {d})$}{equation.31}{}}
+\newlabel{eq:w2_bounds@cref}{{[equation][31][]31}{[1][15][]15}{}{}{}}
+\newlabel{eq:recourse_cost_function}{{32}{15}{Second-Stage Recourse Feasible Set $\mathcal {W}_2(\mathbf {q}, \tilde {d})$}{equation.32}{}}
+\newlabel{eq:recourse_cost_function@cref}{{[equation][32][]32}{[1][15][]15}{}{}{}}
+\citation{bertsekas1999nonlinear}
+\@writefile{toc}{\contentsline {paragraph}{Bilevel Recourse Formulation and True Task Loss:}{16}{section*.9}\protected@file@percent }
+\newlabel{eq:forward_surrogate_pirp}{{33}{16}{Bilevel Recourse Formulation and True Task Loss:}{equation.33}{}}
+\newlabel{eq:forward_surrogate_pirp@cref}{{[equation][33][]33}{[1][15][]16}{}{}{}}
+\newlabel{eq:task_loss_def}{{34}{16}{Bilevel Recourse Formulation and True Task Loss:}{equation.34}{}}
+\newlabel{eq:task_loss_def@cref}{{[equation][34][]34}{[1][16][]16}{}{}{}}
+\@writefile{toc}{\contentsline {paragraph}{Exact Recourse Subgradient via Linear Programming Duality:}{16}{section*.10}\protected@file@percent }
+\newlabel{eq:bilevel_chain_rule}{{35}{16}{Exact Recourse Subgradient via Linear Programming Duality:}{equation.35}{}}
+\newlabel{eq:bilevel_chain_rule@cref}{{[equation][35][]35}{[1][16][]16}{}{}{}}
+\newlabel{prop:recourse_subgradient}{{1}{16}{Exact Recourse Subgradient w.r.t.\ First-Stage Deliveries}{proposition.1}{}}
+\newlabel{prop:recourse_subgradient@cref}{{[proposition][1][]1}{[1][16][]16}{}{}{}}
+\newlabel{eq:exact_recourse_subgradient}{{36}{16}{Exact Recourse Subgradient w.r.t.\ First-Stage Deliveries}{equation.36}{}}
+\newlabel{eq:exact_recourse_subgradient@cref}{{[equation][36][]36}{[1][16][]16}{}{}{}}
+\@writefile{toc}{\contentsline {paragraph}{Economic Mechanism and First-Stage Linearized Surrogate:}{17}{section*.11}\protected@file@percent }
+\newlabel{eq:first_stage_linear_surrogate}{{37}{17}{Economic Mechanism and First-Stage Linearized Surrogate:}{equation.37}{}}
+\newlabel{eq:first_stage_linear_surrogate@cref}{{[equation][37][]37}{[1][17][]17}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.6}Theoretical Guarantees: Complete Second-Stage Recourse and Compactness}{17}{subsection.3.6}\protected@file@percent }
+\newlabel{sec:theoretical_guarantees}{{3.6}{17}{Theoretical Guarantees: Complete Second-Stage Recourse and Compactness}{subsection.3.6}{}}
+\newlabel{sec:theoretical_guarantees@cref}{{[subsection][6][3]3.6}{[1][17][]17}{}{}{}}
+\newlabel{thm:recourse_feasibility}{{1}{17}{Complete Second-Stage Recourse and Compactness}{theorem.1}{}}
+\newlabel{thm:recourse_feasibility@cref}{{[theorem][1][]1}{[1][17][]17}{}{}{}}
+\newlabel{cor:safety}{{1}{19}{Universal Solver Safety in DFL Pipelines}{corollary.1}{}}
+\newlabel{cor:safety@cref}{{[corollary][1][]1}{[1][19][]19}{}{}{}}
+\citation{elmachtoub2022smart}
+\citation{boyd2004convex}
+\@writefile{toc}{\contentsline {section}{\numberline {4}End-to-End Decision-Focused Learning Methodology}{20}{section.4}\protected@file@percent }
+\newlabel{sec:methodology}{{4}{20}{End-to-End Decision-Focused Learning Methodology}{section.4}{}}
+\newlabel{sec:methodology@cref}{{[section][4][]4}{[1][19][]20}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}The Predict-then-Optimize Dilemma: Decision Regret}{20}{subsection.4.1}\protected@file@percent }
+\newlabel{eq:regret_def}{{38}{20}{The Predict-then-Optimize Dilemma: Decision Regret}{equation.38}{}}
+\newlabel{eq:regret_def@cref}{{[equation][38][]38}{[1][20][]20}{}{}{}}
+\@writefile{toc}{\contentsline {paragraph}{The Non-Differentiability Bottleneck:}{20}{section*.12}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Surrogate Formulation 1: Smart Predict-then-Optimize (SPO+)}{20}{subsection.4.2}\protected@file@percent }
+\newlabel{eq:spop_def}{{39}{20}{SPO+ Loss}{equation.39}{}}
+\newlabel{eq:spop_def@cref}{{[equation][39][]39}{[1][20][]20}{}{}{}}
+\newlabel{thm:spop_properties}{{2}{20}{Convexity and Upper Bound Property of SPO+}{theorem.2}{}}
+\newlabel{thm:spop_properties@cref}{{[theorem][2][]2}{[1][20][]20}{}{}{}}
+\newlabel{eq:spop_derivation}{{40}{21}{Surrogate Formulation 1: Smart Predict-then-Optimize (SPO+)}{equation.40}{}}
+\newlabel{eq:spop_derivation@cref}{{[equation][40][]40}{[1][21][]21}{}{}{}}
+\@writefile{toc}{\contentsline {paragraph}{Contrastive RHS Demand Surrogate:}{21}{section*.13}\protected@file@percent }
+\newlabel{eq:spop_subgradient}{{41}{21}{Contrastive RHS Demand Surrogate:}{equation.41}{}}
+\newlabel{eq:spop_subgradient@cref}{{[equation][41][]41}{[1][21][]21}{}{}{}}
+\newlabel{def:rhs_spop}{{5}{21}{Stop-Gradient RHS Demand-Space Surrogate}{definition.5}{}}
+\newlabel{def:rhs_spop@cref}{{[definition][5][]5}{[1][21][]21}{}{}{}}
+\newlabel{eq:asymmetric_weights}{{42}{21}{Stop-Gradient RHS Demand-Space Surrogate}{equation.42}{}}
+\newlabel{eq:asymmetric_weights@cref}{{[equation][42][]42}{[1][21][]21}{}{}{}}
+\citation{mandi2020interior}
+\newlabel{eq:rhs_spop_loss}{{43}{22}{Stop-Gradient RHS Demand-Space Surrogate}{equation.43}{}}
+\newlabel{eq:rhs_spop_loss@cref}{{[equation][43][]43}{[1][21][]22}{}{}{}}
+\newlabel{prop:demand_gradient}{{2}{22}{Gradient of the Stop-Gradient Surrogate}{proposition.2}{}}
+\newlabel{prop:demand_gradient@cref}{{[proposition][2][]2}{[1][22][]22}{}{}{}}
+\newlabel{eq:demand_subgradient}{{44}{22}{Gradient of the Stop-Gradient Surrogate}{equation.44}{}}
+\newlabel{eq:demand_subgradient@cref}{{[equation][44][]44}{[1][22][]22}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Surrogate Formulation 2: RHS Interior Point Differentiation (RHS-IntOpt)}{22}{subsection.4.3}\protected@file@percent }
+\newlabel{sec:intopt}{{4.3}{22}{Surrogate Formulation 2: RHS Interior Point Differentiation (RHS-IntOpt)}{subsection.4.3}{}}
+\newlabel{sec:intopt@cref}{{[subsection][3][4]4.3}{[1][22][]22}{}{}{}}
+\newlabel{eq:intopt_barrier}{{45}{22}{Surrogate Formulation 2: RHS Interior Point Differentiation (RHS-IntOpt)}{equation.45}{}}
+\newlabel{eq:intopt_barrier@cref}{{[equation][45][]45}{[1][22][]22}{}{}{}}
+\citation{berthet2020learning}
+\citation{berthet2020learning}
+\newlabel{eq:intopt_jacobian}{{46}{23}{Surrogate Formulation 2: RHS Interior Point Differentiation (RHS-IntOpt)}{equation.46}{}}
+\newlabel{eq:intopt_jacobian@cref}{{[equation][46][]46}{[1][22][]23}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Surrogate Formulation 3: RHS Differentiable Perturbed Optimizer (RHS-DPO)}{23}{subsection.4.4}\protected@file@percent }
+\newlabel{sec:dpo}{{4.4}{23}{Surrogate Formulation 3: RHS Differentiable Perturbed Optimizer (RHS-DPO)}{subsection.4.4}{}}
+\newlabel{sec:dpo@cref}{{[subsection][4][4]4.4}{[1][23][]23}{}{}{}}
+\newlabel{eq:projected_dpo}{{48}{23}{Surrogate Formulation 3: RHS Differentiable Perturbed Optimizer (RHS-DPO)}{equation.48}{}}
+\newlabel{eq:projected_dpo@cref}{{[equation][48][]48}{[1][23][]23}{}{}{}}
+\newlabel{eq:dpo_smoothed_decision}{{49}{23}{Surrogate Formulation 3: RHS Differentiable Perturbed Optimizer (RHS-DPO)}{equation.49}{}}
+\newlabel{eq:dpo_smoothed_decision@cref}{{[equation][49][]49}{[1][23][]23}{}{}{}}
+\newlabel{eq:dpo_gradient}{{50}{23}{Surrogate Formulation 3: RHS Differentiable Perturbed Optimizer (RHS-DPO)}{equation.50}{}}
+\newlabel{eq:dpo_gradient@cref}{{[equation][50][]50}{[1][23][]23}{}{}{}}
+\@writefile{toc}{\contentsline {paragraph}{Analysis of the Projected Perturbation Estimator:}{23}{section*.14}\protected@file@percent }
+\newlabel{eq:truncation_prob}{{51}{23}{Analysis of the Projected Perturbation Estimator:}{equation.51}{}}
+\newlabel{eq:truncation_prob@cref}{{[equation][51][]51}{[1][23][]23}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5}Two-Phase Training Schedule with Proximal Trust-Region Fine-Tuning}{24}{subsection.4.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Proximal Regularization and Phase 2 Gradient:}{24}{section*.15}\protected@file@percent }
+\newlabel{eq:proximal_loss}{{52}{24}{Proximal Regularization and Phase 2 Gradient:}{equation.52}{}}
+\newlabel{eq:proximal_loss@cref}{{[equation][52][]52}{[1][24][]24}{}{}{}}
+\citation{makridakis2022m5}
+\citation{solomon1987algorithms}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {2}{\ignorespaces Two-Phase DFL Training with LP Warmup and Proximal Trust-Region MILP Fine-Tuning}}{25}{algorithm.2}\protected@file@percent }
+\newlabel{alg:two_phase}{{2}{25}{Two-Phase DFL Training with LP Warmup and Proximal Trust-Region MILP Fine-Tuning}{algorithm.2}{}}
+\newlabel{alg:two_phase@cref}{{[algorithm][2][]2}{[1][24][]25}{}{}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Experimental Setup and Benchmark Suite}{25}{section.5}\protected@file@percent }
+\newlabel{sec:experimental_setup}{{5}{25}{Experimental Setup and Benchmark Suite}{section.5}{}}
+\newlabel{sec:experimental_setup@cref}{{[section][5][]5}{[1][25][]25}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Perishable Retail Demand and Spatial Networks}{25}{subsection.5.1}\protected@file@percent }
+\newlabel{subsec:networks}{{5.1}{25}{Perishable Retail Demand and Spatial Networks}{subsection.5.1}{}}
+\newlabel{subsec:networks@cref}{{[subsection][1][5]5.1}{[1][25][]25}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Physical Network Parameters and Factorial Sensitivity Grid}{26}{subsection.5.2}\protected@file@percent }
+\newlabel{subsec:physical_params}{{5.2}{26}{Physical Network Parameters and Factorial Sensitivity Grid}{subsection.5.2}{}}
+\newlabel{subsec:physical_params@cref}{{[subsection][2][5]5.2}{[1][26][]26}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Benchmark Model Suite (14 Competing Architectures)}{26}{subsection.5.3}\protected@file@percent }
+\newlabel{subsec:models}{{5.3}{26}{Benchmark Model Suite (14 Competing Architectures)}{subsection.5.3}{}}
+\newlabel{subsec:models@cref}{{[subsection][3][5]5.3}{[1][26][]26}{}{}{}}
+\citation{ke2017lightgbm}
+\citation{ke2017lightgbm}
+\citation{lim2021temporal}
+\citation{bertsimas2020predictive}
+\citation{berthet2020learning}
+\citation{mandi2020interior}
+\citation{elmachtoub2022smart}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Evaluation Metrics}{27}{subsection.5.4}\protected@file@percent }
+\newlabel{subsec:metrics}{{5.4}{27}{Evaluation Metrics}{subsection.5.4}{}}
+\newlabel{subsec:metrics@cref}{{[subsection][4][5]5.4}{[1][27][]27}{}{}{}}
+\citation{holm1979simple}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Out-of-sample Normalized Decision Regret (\%) across 14 evaluated benchmark architectures on Clustered topology \texttt  {C1} ($\tau = 3$, $p_u/h = 20$). Error bars denote cross-seed standard deviation across 5 independent random seeds.}}{28}{figure.caption.16}\protected@file@percent }
+\newlabel{fig:regret_comparison}{{1}{28}{Out-of-sample Normalized Decision Regret (\%) across 14 evaluated benchmark architectures on Clustered topology \texttt {C1} ($\tau = 3$, $p_u/h = 20$). Error bars denote cross-seed standard deviation across 5 independent random seeds}{figure.caption.16}{}}
+\newlabel{fig:regret_comparison@cref}{{[figure][1][]1}{[1][28][]28}{}{}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {6}Empirical Results and Computational Analysis}{28}{section.6}\protected@file@percent }
+\newlabel{sec:results}{{6}{28}{Empirical Results and Computational Analysis}{section.6}{}}
+\newlabel{sec:results@cref}{{[section][6][]6}{[1][28][]28}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Main 1,500-Epoch 14-Model Benchmark Comparison}{28}{subsection.6.1}\protected@file@percent }
+\newlabel{subsec:main_benchmark}{{6.1}{28}{Main 1,500-Epoch 14-Model Benchmark Comparison}{subsection.6.1}{}}
+\newlabel{subsec:main_benchmark@cref}{{[subsection][1][6]6.1}{[1][28][]28}{}{}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Out-of-Sample Empirical Performance Across 14 Benchmark Models on Clustered Topology \texttt  {C1} ($\tau = 3$, $p_u/h = 20$, $1,500$ Epochs across $5$ Independent Seeds, $30$ Test Instances; Oracle Optimal Cost $= \$1,873.58$). Reported regret is mean $\pm \text  {SD}_{\text  {seed}}$ ($\text  {SD}_{\text  {inst}}$) across $n = 30$ test instances and 5 random seeds. Holding cost is the exact residual $C_{\text  {total}} - C_{\text  {route}} - C_{\text  {spoil}} - C_{\text  {stock}}$.}}{29}{table.caption.17}\protected@file@percent }
+\newlabel{tab:main_benchmark}{{3}{29}{Out-of-Sample Empirical Performance Across 14 Benchmark Models on Clustered Topology \texttt {C1} ($\tau = 3$, $p_u/h = 20$, $1,500$ Epochs across $5$ Independent Seeds, $30$ Test Instances; Oracle Optimal Cost $= \$1,873.58$). Reported regret is mean $\pm \text {SD}_{\text {seed}}$ ($\text {SD}_{\text {inst}}$) across $n = 30$ test instances and 5 random seeds. Holding cost is the exact residual $C_{\text {total}} - C_{\text {route}} - C_{\text {spoil}} - C_{\text {stock}}$}{table.caption.17}{}}
+\newlabel{tab:main_benchmark@cref}{{[table][3][]3}{[1][28][]29}{}{}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Paired Statistical Hypothesis Testing Comparing \texttt  {Two-Phase\_DFL (Ours)} ($22.28\%$ Mean Regret) Against All 13 Competing Baselines across $n = 30$ Seed-Averaged Independent Test Instances. Reported metrics include parametric and bootstrap $95\%$ confidence intervals for regret difference, Cohen's $d_z$ effect sizes, one-sided Wilcoxon signed-rank tests with step-down Holm-Bonferroni correction ($p_{\text  {Holm}}$), and paired Student's $t$-tests.}}{29}{table.caption.18}\protected@file@percent }
+\newlabel{tab:stat_significance}{{4}{29}{Paired Statistical Hypothesis Testing Comparing \texttt {Two-Phase\_DFL (Ours)} ($22.28\%$ Mean Regret) Against All 13 Competing Baselines across $n = 30$ Seed-Averaged Independent Test Instances. Reported metrics include parametric and bootstrap $95\%$ confidence intervals for regret difference, Cohen's $d_z$ effect sizes, one-sided Wilcoxon signed-rank tests with step-down Holm-Bonferroni correction ($p_{\text {Holm}}$), and paired Student's $t$-tests}{table.caption.18}{}}
+\newlabel{tab:stat_significance@cref}{{[table][4][]4}{[1][29][]29}{}{}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Validation decision regret convergence trajectories over 1,500 epochs across 5 independent random seeds. Shaded bands represent $\pm 1$ standard deviation across seeds, and markers highlight the best-validation regret checkpoint.}}{30}{figure.caption.19}\protected@file@percent }
+\newlabel{fig:convergence_curves}{{2}{30}{Validation decision regret convergence trajectories over 1,500 epochs across 5 independent random seeds. Shaded bands represent $\pm 1$ standard deviation across seeds, and markers highlight the best-validation regret checkpoint}{figure.caption.19}{}}
+\newlabel{fig:convergence_curves@cref}{{[figure][2][]2}{[1][29][]30}{}{}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Empirical Comparison of Asymmetric Quantile and Safety-Stock PTO Baselines Across Critical Fractiles: Single-Period Myopic ($\alpha _{\text  {myopic}} = 0.8000$) vs.\ Multi-Period $\tau $-Amortized ($\beta _\tau ^* = 0.8824$) on Clustered Topology \texttt  {C1} ($\tau =3, p_u/h=20$).}}{30}{table.caption.20}\protected@file@percent }
+\newlabel{tab:fractile_reconciliation}{{5}{30}{Empirical Comparison of Asymmetric Quantile and Safety-Stock PTO Baselines Across Critical Fractiles: Single-Period Myopic ($\alpha _{\text {myopic}} = 0.8000$) vs.\ Multi-Period $\tau $-Amortized ($\beta _\tau ^* = 0.8824$) on Clustered Topology \texttt {C1} ($\tau =3, p_u/h=20$)}{table.caption.20}{}}
+\newlabel{tab:fractile_reconciliation@cref}{{[table][5][]5}{[1][30][]30}{}{}{}}
+\@writefile{toc}{\contentsline {paragraph}{Key Empirical Findings and Capacity-Regime Results:}{30}{section*.21}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Period-level net replenishment needs, delivered quantities, carryover inventory, and fleet capacity binding dynamics ($K \cdot Q = 200$ units) comparing Two-Stage PTO baselines (\texttt  {Ridge\_PTO}, \texttt  {LightGBM\_PTO}, \texttt  {LightGBM\_Quantile\_PTO}, \texttt  {SafetyStock\_PTO}) against \texttt  {Two-Phase\_DFL (Ours)}. Two-Phase DFL smoothly moderates deliveries across the horizon to avoid capacity saturation, cutting period-level binding frequency to 69.33\% (69.3\%) (and 46.7\% in Period 3) and realized stockouts to 14.84 units/period.}}{32}{figure.caption.22}\protected@file@percent }
+\newlabel{fig:inventory_trajectory}{{3}{32}{Period-level net replenishment needs, delivered quantities, carryover inventory, and fleet capacity binding dynamics ($K \cdot Q = 200$ units) comparing Two-Stage PTO baselines (\texttt {Ridge\_PTO}, \texttt {LightGBM\_PTO}, \texttt {LightGBM\_Quantile\_PTO}, \texttt {SafetyStock\_PTO}) against \texttt {Two-Phase\_DFL (Ours)}. Two-Phase DFL smoothly moderates deliveries across the horizon to avoid capacity saturation, cutting period-level binding frequency to 69.33\% (69.3\%) (and 46.7\% in Period 3) and realized stockouts to 14.84 units/period}{figure.caption.22}{}}
+\newlabel{fig:inventory_trajectory@cref}{{[figure][3][]3}{[1][31][]32}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Computational Acceleration via LP-Relaxation Warmup}{32}{subsection.6.2}\protected@file@percent }
+\newlabel{subsec:speedup}{{6.2}{32}{Computational Acceleration via LP-Relaxation Warmup}{subsection.6.2}{}}
+\newlabel{subsec:speedup@cref}{{[subsection][2][6]6.2}{[1][32][]32}{}{}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Empirical Computational Acceleration and Convergence: Direct MILP vs.\ Two-Phase DFL ($E = 20$ Exact Solver Epochs).}}{32}{table.caption.23}\protected@file@percent }
+\newlabel{tab:speedup_analysis}{{6}{32}{Empirical Computational Acceleration and Convergence: Direct MILP vs.\ Two-Phase DFL ($E = 20$ Exact Solver Epochs)}{table.caption.23}{}}
+\newlabel{tab:speedup_analysis@cref}{{[table][6][]6}{[1][32][]32}{}{}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Wall-clock training time versus validation decision regret Pareto frontier comparing Two-Phase LP-Relaxation Warmup against Direct MILP branch-and-cut training. Two-Phase DFL achieves a $5.66\times $ wall-clock speedup while converging to lower decision regret ($16.82\%$ vs.\ $23.43\%$).}}{33}{figure.caption.24}\protected@file@percent }
+\newlabel{fig:speedup_pareto}{{4}{33}{Wall-clock training time versus validation decision regret Pareto frontier comparing Two-Phase LP-Relaxation Warmup against Direct MILP branch-and-cut training. Two-Phase DFL achieves a $5.66\times $ wall-clock speedup while converging to lower decision regret ($16.82\%$ vs.\ $23.43\%$)}{figure.caption.24}{}}
+\newlabel{fig:speedup_pareto@cref}{{[figure][4][]4}{[1][32][]33}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Sensitivity Analysis across Asymmetric Costs, Shelf-Life, Topologies, and Capacity Tightness}{33}{subsection.6.3}\protected@file@percent }
+\newlabel{subsec:sensitivity}{{6.3}{33}{Sensitivity Analysis across Asymmetric Costs, Shelf-Life, Topologies, and Capacity Tightness}{subsection.6.3}{}}
+\newlabel{subsec:sensitivity@cref}{{[subsection][3][6]6.3}{[1][33][]33}{}{}{}}
+\@writefile{toc}{\contentsline {paragraph}{Evaluation Protocol and Methodological Clarification:}{33}{section*.25}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Topology-averaged out-of-sample Normalized Decision Regret (\%) at baseline fleet capacity ($\gamma = 1.0, Q = 100$) across product shelf lives $\tau \in \{2, 3, 5\}$ and cost asymmetry ratios $p_u/h \in \{10, 20, 50\}$, matching the topology averages in Table \ref {tab:sensitivity}.}}{34}{figure.caption.26}\protected@file@percent }
+\newlabel{fig:sensitivity_heatmap}{{5}{34}{Topology-averaged out-of-sample Normalized Decision Regret (\%) at baseline fleet capacity ($\gamma = 1.0, Q = 100$) across product shelf lives $\tau \in \{2, 3, 5\}$ and cost asymmetry ratios $p_u/h \in \{10, 20, 50\}$, matching the topology averages in Table \ref {tab:sensitivity}}{figure.caption.26}{}}
+\newlabel{fig:sensitivity_heatmap@cref}{{[figure][5][]5}{[1][34][]34}{}{}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Factorial Sensitivity Analysis under Baseline Fleet Capacity ($\gamma = 1.0, Q = 100$): Out-of-Sample Normalized Decision Regret (\%) and Operational Costs Across Topologies (\texttt  {C1}, \texttt  {R1}, \texttt  {RC1}), Shelf Lives ($\tau \in \{2, 3, 5\}$), and Cost Asymmetry Ratios ($p_u/h \in \{10, 20, 50\}$).}}{34}{table.caption.27}\protected@file@percent }
+\newlabel{tab:sensitivity}{{7}{34}{Factorial Sensitivity Analysis under Baseline Fleet Capacity ($\gamma = 1.0, Q = 100$): Out-of-Sample Normalized Decision Regret (\%) and Operational Costs Across Topologies (\texttt {C1}, \texttt {R1}, \texttt {RC1}), Shelf Lives ($\tau \in \{2, 3, 5\}$), and Cost Asymmetry Ratios ($p_u/h \in \{10, 20, 50\}$)}{table.caption.27}{}}
+\newlabel{tab:sensitivity@cref}{{[table][7][]7}{[1][34][]34}{}{}{}}
+\@writefile{toc}{\contentsline {paragraph}{Key Observations from the Factorial Sensitivity Analysis:}{34}{section*.28}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces Factorial Capacity Tightness Breakdown Across Tightness Levels ($\gamma \in \{0.8, 1.0, 1.5\}$, $Q \in \{80, 100, 150\}$): Mean Out-of-Sample Performance Across Topologies, Shelf Lives, and Cost Ratios ($27$ Factorial Instances per Tightness Level).}}{36}{table.caption.29}\protected@file@percent }
+\newlabel{tab:tightness_breakdown}{{8}{36}{Factorial Capacity Tightness Breakdown Across Tightness Levels ($\gamma \in \{0.8, 1.0, 1.5\}$, $Q \in \{80, 100, 150\}$): Mean Out-of-Sample Performance Across Topologies, Shelf Lives, and Cost Ratios ($27$ Factorial Instances per Tightness Level)}{table.caption.29}{}}
+\newlabel{tab:tightness_breakdown@cref}{{[table][8][]8}{[1][35][]36}{}{}{}}
+\@writefile{toc}{\contentsline {paragraph}{Empirical Analysis of the Tight-Fleet Regime:}{36}{section*.30}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {7}Managerial Insights for Perishable Logistics Planners}{36}{section.7}\protected@file@percent }
+\newlabel{sec:managerial_insights}{{7}{36}{Managerial Insights for Perishable Logistics Planners}{section.7}{}}
+\newlabel{sec:managerial_insights@cref}{{[section][7][]7}{[1][36][]36}{}{}{}}
+\@writefile{toc}{\contentsline {paragraph}{1. Evaluate Forecasts by Their Operational Consequences:}{36}{section*.31}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{2. Store-Level Diagnostics Identify Uneven Stockout in Tested Baselines:}{37}{section*.32}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{3. Solver Profiling Shows a Speedup Under the Tested Setup:}{37}{section*.33}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {8}Conclusion and Future Research Directions}{37}{section.8}\protected@file@percent }
+\newlabel{sec:conclusion}{{8}{37}{Conclusion and Future Research Directions}{section.8}{}}
+\newlabel{sec:conclusion@cref}{{[section][8][]8}{[1][37][]37}{}{}{}}
+\bibstyle{plainnat}
+\bibdata{references}
+\@writefile{toc}{\contentsline {paragraph}{Funding:}{38}{section*.35}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Conflicts of Interest:}{38}{section*.36}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Ethics Approval:}{38}{section*.37}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Data and Code Availability:}{38}{section*.38}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Declaration of Generative AI and AI-assisted technologies in the writing process:}{38}{section*.39}\protected@file@percent }
+\gdef \@abspage@last{38}

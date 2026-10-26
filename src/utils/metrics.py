@@ -7,20 +7,23 @@ def simulate_perishable_inventory_fifo(
     true_demand: np.ndarray,
     tau: int = 3,
     initial_inventory: np.ndarray | None = None,
+    store_capacity_Ci: float = float("inf"),
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Simulates exact FIFO perishable inventory dynamics at retail stores under true demand.
+    Enforces store physical storage capacity Ci via oldest-first overflow disposal (Algorithm 1).
 
     Args:
         q_delivered: Replenishment quantity delivered to each store (N, T).
         true_demand: True customer demand realization (N, T).
         tau: Shelf life (in periods).
         initial_inventory: Initial stock of age 1..tau-1 (N, tau-1), defaults to zeros.
+        store_capacity_Ci: Maximum physical store storage capacity.
 
     Returns:
         I_on_hand: Carryover inventory at end of each period (N, T, tau-1).
         y_pos: Stockout / unmet emergency demand (N, T).
-        y_neg: Spoilage / expired inventory (N, T).
+        y_neg: Spoilage / expired / discarded inventory (N, T).
         w_consumed: Inventory consumed by age (N, T, tau).
     """
     N, T = true_demand.shape
@@ -63,6 +66,20 @@ def simulate_perishable_inventory_fifo(
             # Oldest unconsumed inventory (age tau) expires / spoils
             y_neg[i, t] = max(0.0, stock_by_age[tau - 1])
 
+            # Store capacity enforcement (Algorithm 1):
+            # If tentative surviving intermediate inventory exceeds store_capacity_Ci,
+            # discard excess inventory from oldest intermediate cohort first (a = tau-1 down to 1)
+            tentative_carryover = float(np.sum(stock_by_age[: tau - 1]))
+            excess = max(0.0, tentative_carryover - store_capacity_Ci)
+            if excess > 0.0:
+                for a in reversed(range(tau - 1)):
+                    if excess <= 0.0:
+                        break
+                    discard = min(stock_by_age[a], excess)
+                    stock_by_age[a] -= discard
+                    excess -= discard
+                    y_neg[i, t] += discard
+
             # Remaining unconsumed inventory for ages 1..tau-1 carries over
             for a in range(tau - 1):
                 I_on_hand[i, t, a] = stock_by_age[a]
@@ -83,6 +100,7 @@ def evaluate_decisions_under_true_demand(
     p_u: float = 20.0,
     tau: int = 3,
     initial_inventory: np.ndarray | None = None,
+    store_capacity_Ci: float = 70.0,
 ) -> dict[str, float]:
     """
     Evaluates the exact realized operational costs of planned decisions under true demand.
@@ -98,6 +116,7 @@ def evaluate_decisions_under_true_demand(
         p_u: Stockout penalty per unit.
         tau: Shelf life.
         initial_inventory: (N, tau-1) initial stock.
+        store_capacity_Ci: Store storage capacity limit.
 
     Returns:
         Dictionary with routing_cost, holding_cost, spoilage_cost, stockout_cost, total_cost.
@@ -125,6 +144,7 @@ def evaluate_decisions_under_true_demand(
         true_demand=true_demand,
         tau=tau,
         initial_inventory=initial_inventory,
+        store_capacity_Ci=store_capacity_Ci,
     )
 
     # Age-differentiated holding cost: h_a = h + (a - 1) * aging_surcharge_eps

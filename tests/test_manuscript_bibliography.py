@@ -96,7 +96,7 @@ def test_manuscript_structure_and_citations():
     expected_sections = [
         r"\section{Introduction}",
         r"\section{Literature Review and Methodological Positioning}",
-        r"\section{Mathematical Formulation and Lagrangian Recourse Reformulation}",
+        r"\section{Mathematical Formulation and Bilevel Recourse Reformulation}",
         r"\section{End-to-End Decision-Focused Learning Methodology}",
         r"\section{Experimental Setup and Benchmark Suite}",
         r"\section{Empirical Results and Computational Analysis}",
@@ -115,7 +115,7 @@ def test_manuscript_structure_and_citations():
     assert r"\label{tab:fractile_reconciliation}" in tex_text, "Fractile reconciliation table label missing."
     assert r"\label{tab:speedup_analysis}" in tex_text, "Speedup table label missing."
     assert r"\label{tab:sensitivity}" in tex_text, "Sensitivity table label missing."
-    assert r"\label{thm:capacity_externality}" in tex_text, "Theorem capacity externality label missing."
+    assert r"\label{rem:simplex_degeneracy}" in tex_text, "Remark simplex degeneracy label missing."
 
     # Environment balance
     begins = re.findall(r'\\begin\{([^}]+)\}', tex_text)
