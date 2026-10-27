@@ -1,0 +1,88 @@
+% ============================================================================
+\section{Results}\label{sec:results}
+% ============================================================================
+
+\subsection{Base case}\label{sec:base}
+
+Table~\ref{tab:base} reports test-set averages over the 40 episodes and Figure~\ref{fig:components} decomposes the costs. Tuning selected order-up-to levels at the 0.95 quantile with daily delivery for BSP and BSP-EW, UL$_\lambda$ with $\lambda=1$, $\alpha=0.95$, $\beta=0.9$, quantile level $\alpha^\star=\alphaQBase$ for LA-Quantile and budget $\Gamma=\gammaRobBase$ for LA-Robust.
+
+\begin{table}[t]
+\centering\footnotesize
+\caption{Base case: mean cost per 21-day test episode and its components, fill rate, waste rate (expired units per delivered unit) and store visits per day (40 episodes).}\label{tab:base}
+\setlength{\tabcolsep}{4pt}
+\resizebox{\textwidth}{!}{\input{figures/tab_base.tex}}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\textwidth]{fig_components.pdf}
+\caption{Cost composition of each policy in the base case.}\label{fig:components}
+\end{figure}
+
+Four observations stand out. First, uncertainty is expensive: with perfect demand information the same lookahead costs \costPIBase{}, about half of the best implementable policy, almost entirely because lost sales and holding vanish. Second, point forecasts are a poor input for perishable replenishment. LA-Mean plans to sell exactly the expected demand and loses \lostLAMeanBase{} per episode in lost sales (fill rate \fillLAMeanBase\%), as Proposition~\ref{prop:marginal} suggests when $p_u$ is four times $p_s$. Third, the three stock-age-based inventory rules are the cheapest policies: UL$_\lambda$, BSP and BSP-EW cost between \costULBase{} and \costBSPEWBase{} with a fill rate of \fillULBase\% and a waste rate near 2.6\%. With daily review, little of the current stock is at risk of expiring before it is sold, so the waste correction of BSP-EW rarely changes an order.
+
+Fourth, integration with routing does reduce travel but loses more on the inventory side. The lookahead policies visit 7.7--8.9 stores per day instead of 9.2--9.6 and save 400--900 in routing, but LA-Quantile, LA-Robust and ScenPO-SS incur 27--32\% more holding cost than the rules and waste about twice as much (waste rates 4.5--5.4\%). A deterministic plan that covers two or three days with quantile targets stacks a safety buffer on every covered day, even though the next day's re-planning will correct any shortfall; the stochastic scenario model reduces lost sales but, because its single plan must work for all scenarios, it also covers several days generously.
+
+\begin{table}[t]
+\centering\footnotesize
+\caption{Paired episode-level comparisons of LA-DFL with every other policy (base case). Negative differences favour LA-DFL. Holm adjustment over the five prespecified primary comparisons.}\label{tab:tests}
+\setlength{\tabcolsep}{4pt}
+\resizebox{\textwidth}{!}{\input{figures/tab_tests.tex}}
+\end{table}
+
+LA-DFL is the cheapest of the integrated policies (Table~\ref{tab:tests}). It reduces cost by \relLAQBase\% relative to LA-Quantile (95\% CI \ciLAQBase{}, lower in \winLAQBase\% of the episodes), by \relLARobBase\% relative to LA-Robust and by \relScenPOBase\% relative to ScenPO-SS (Holm-adjusted $p\le$ \pholmScenPOBase{}). It achieves this by halving the waste rate of LA-Quantile (\wasteDFLBase\% vs.\ \wasteLAQBase\%) and cutting its holding cost by more than a fifth, while accepting somewhat more lost sales. It does not, however, beat the inventory rules: LA-DFL costs \relBSPEWBase\% more than BSP-EW and \relULBase\% more than UL$_\lambda$, and both differences are significant. The rules remain better in 78--85\% of the episodes.
+
+\subsection{What the decision-focused targets learn}\label{sec:dflresults}
+
+Table~\ref{tab:corrections} summarises the learned corrections on the decision states that LA-DFL visits in 20 test episodes. The dominant pattern is temporal. For the implemented day the network keeps the target at about the 0.91 quantile, essentially the tuned LA-Quantile level, but it lowers the targets of the second and third lookahead days to about the 0.79 and 0.76 quantiles. In inventory terms, the network has learned that only today's shortfall is irreversible: tomorrow's planned demand will be re-planned with tomorrow's stock and forecast, so a full safety buffer on that day mostly turns into carried stock and, with a three-day shelf life, into waste. This is precisely the recourse that a deterministic lookahead ignores and that Proposition~\ref{prop:dfl} lets the gradient account for. Context-specific corrections are smaller: targets are lowered somewhat more on promotion days, where the forecast spread is already wide, and slightly less when the store holds more or older stock. Validation cost improved during the first three epochs and deteriorated afterwards (Figure~\ref{fig:dfltraining}), which is why model selection on closed-loop validation cost is part of the method.
+
+\begin{table}[t]
+\centering\footnotesize
+\caption{Learned corrections of LA-DFL on the decision states of 20 test episodes (base case): mean correction $\delta_\theta$ in forecast-scale units, implied quantile level of the planning target, and target relative to the mean forecast. $k$ is the lookahead offset; stock is measured in days of mean store demand.}\label{tab:corrections}
+\resizebox{\textwidth}{!}{\input{figures/tab_dfl_corrections.tex}}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.5\textwidth]{fig_dfl_training.pdf}
+\caption{Closed-loop validation cost of LA-DFL by training epoch (base case). Epoch 0 is the tuned LA-Quantile policy.}\label{fig:dfltraining}
+\end{figure}
+
+\subsection{Sensitivity analysis}\label{sec:sensitivity}
+
+Table~\ref{tab:sensitivity} reports test costs across the configurations, and Table~\ref{tab:dfldiffs} the paired differences of LA-DFL. \SensitivityText
+
+\begin{table}[t]
+\centering\footnotesize
+\caption{Mean test cost per episode by configuration (one factor changed at a time; bold: lowest implementable policy), and fill rates of selected policies.}\label{tab:sensitivity}
+\setlength{\tabcolsep}{4pt}
+\resizebox{\textwidth}{!}{\input{figures/tab_sensitivity.tex}}
+\end{table}
+
+\begin{table}[t]
+\centering\footnotesize
+\caption{Paired cost difference of LA-DFL relative to each comparator, in percent of the comparator's cost, by configuration. Bold: 95\% paired bootstrap interval excludes zero.}\label{tab:dfldiffs}
+\resizebox{\textwidth}{!}{\input{figures/tab_dfl_diffs.tex}}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.95\textwidth]{fig_sensitivity.pdf}
+\caption{Cost of selected policies relative to LA-Quantile, by configuration.}\label{fig:sensitivity}
+\end{figure}
+
+\subsection{Store-level service}\label{sec:stores}
+
+Average fill rates hide how service is distributed over the network (Figure~\ref{fig:stores}). The inventory rules serve every store at least 95.4\% and, if anything, serve distant stores slightly better (correlation between store fill rate and depot distance $+0.75$ for BSP-EW). The deterministic lookahead policies do the opposite: their fill rate falls with distance (correlations between $-0.19$ and $-0.36$), and the worst-served store, a mid-distance store, reaches only 92.0\% under LA-Quantile and 92.4\% under LA-DFL. Consolidating deliveries saves the most travel at stores that are expensive to reach, and the plan then accepts shortages there. ScenPO-SS spreads service more evenly (worst store 95.4\%). This effect is relevant for retailers with service-level agreements per store: an integrated plan that is cheaper overall may concentrate stock-outs at peripheral stores.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.6\textwidth]{fig_store_service.pdf}
+\caption{Store fill rate against distance from the depot (base case, mean over 40 test episodes).}\label{fig:stores}
+\end{figure}
+
+\subsection{Computation}\label{sec:computation}
+
+All \ndecisionsBase{} lookahead decisions of the base-case test were solved to a proven gap of at most \maxgapBase\%, with \nonoptBase{} time-limit stops and \fallbacksBase{} fallbacks; the same holds in every configuration reported. A deterministic lookahead decision takes 1.1--1.4 seconds on average and a ScenPO-SS decision \secsScenPOBase{} seconds; the rules need milliseconds. Training LA-DFL (1,260 states, eight epochs including closed-loop validation) took about 16 minutes with 15 worker processes, and one base-case configuration, including tuning of all policies, about 35 minutes. Once trained, LA-DFL costs no more online than any deterministic lookahead.
+
+\input{sections/verification}

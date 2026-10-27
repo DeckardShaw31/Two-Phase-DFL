@@ -1,0 +1,39 @@
+% ============================================================================
+\section{Related literature}\label{sec:literature}
+% ============================================================================
+
+\subsection{Perishable inventory control}
+
+Perishable inventory theory studies ordering when units have a finite lifetime and the age of stock matters for issuing, outdating and service \citep{nahmias1982perishable}; \citet{bakker2012review} and \citet{janssen2016deteriorating} review the subsequent literature. Optimal policies depend on the full age vector and are computed by stochastic dynamic programming only for small instances, so practice relies on simple rules. Base-stock policies that raise the total inventory to a target are the default in automated retail ordering, and \citet{bu2023asymptotic} show that they become asymptotically optimal when lifetime, demand volume or the penalty costs grow. Stock-age information helps when lifetimes are short. \citet{broekmeulen2009heuristic} propose to add the estimated waste of current stock to the base-stock order (EWA), \citet{haijema2014new} studies optimal ordering, issuing and disposal decisions, \citet{haijema2016stock} compare stock-level dependent hybrid base-stock and constant-order rules, and \citet{haijema2019improved} show in 11,177 instances that a base-stock policy with an estimated-waste correction (BSP-low-EW) performs close to the SDP optimum and better than the other practical rules. Deep reinforcement learning has been applied to perishable inventory control \citep{demoor2022reward,boute2022deep,temizoz2025deep} and matches strong heuristics in single-location settings \citep{gijsbrechts2022can}. Data-driven newsvendor work uses features to set perishable order quantities directly \citep{ban2019big,huber2019data}. All of these studies consider a single stocking point or decouple stores; deliveries do not compete for vehicles and the cost of a delivery does not depend on which other stores are visited.
+
+\subsection{Perishable inventory routing}
+
+Inventory routing integrates replenishment with vehicle routing \citep{coelho2014thirty}. For perishables, \citet{coelho2014optimal} and \citet{alvarez2020formulations} develop exact formulations and branch-and-cut for deterministic demand with age-dependent inventory, and \citet{soysal2015modeling} add demand uncertainty and emissions in a chance-constrained model. \citet{crama2018stochastic} study stochastic perishable inventory routing and compare an expected-value policy, the deliver-up-to-level rule UL$_\lambda$, and decomposition methods; they find that the simple rule is competitive in some settings and that more advanced methods pay off in others. \citet{he2024robust} study a robust perishable IRP under demand uncertainty and solve robust-counterpart reformulations by Benders decomposition and an iterated local search. For non-perishable IRPs under uncertainty, \citet{solyali2012robust} derive robust counterparts, \citet{coelho2014heuristics} show that rolling-horizon policies using stochastic information outperform deterministic ones, and \citet{malicki2021cyclic} integrate dynamic safety stocks into cyclic inventory routing under non-stationary demand. Most closely related to our question, \citet{jia2025scenario} propose Scenario Predict-then-Optimize: quantile neural forecasts generate demand scenarios for a stochastic rolling-horizon IRP, and the single-stage scenario model performs best on synthetic and industrial data; their model has backlogging and no product ageing. \citet{greif2024combinatorial} learn the parameters of a prize-collecting TSP policy for dynamic IRP with machine learning. None of these works compares stock-age-based inventory rules, robust and scenario-based lookahead and decision-focused learning under one closed-loop simulator with perishability.
+
+\subsection{Contextual and decision-focused optimisation}
+
+When demand forecasts feed an optimisation model, one can estimate first and then optimise, or train the forecaster on the downstream cost \citep{elmachtoub2022smart,sadana2025survey}. Decision-focused learning (DFL) differentiates through the optimisation problem, either exactly for convex problems \citep{amos2017optnet,donti2017task} or through surrogates and perturbations for combinatorial ones \citep{berthet2020learning,mandi2024decision,tang2024pyepo}; solution caching reduces the number of solver calls \citep{mulamba2021contrastive}. The theory is nuanced: under a well-specified model, estimate-then-optimise can converge faster and stochastically dominate integrated training \citep{hu2022fast,elmachtoub2023estimate}, so gains from DFL should be expected mainly when the downstream model is a misspecified approximation. In inventory control, \citet{alvo2023neural} train neural ordering policies by differentiating simulated costs through known inventory dynamics. For inventory routing, an early DFL prototype exists only as a workshop abstract without perishability \citep{islam2023optimizing}. Our method differentiates realised perishable inventory cost through a deterministic rolling-horizon PIRP whose routes are fixed by an exact MILP, so that learning corrects the safety stock embedded in the plan rather than the routing decisions.
+
+\subsection{Positioning}
+
+Table~\ref{tab:positioning} positions the study. It is the first, to our knowledge, to evaluate decision-focused learning for perishable inventory routing against the inventory-control rules recommended in the perishable inventory literature and against robust and scenario-based lookahead methods, under identical information and an exact optimisation layer. The methodological novelty is the decision-focused target layer with its structural justification; the managerial contribution is evidence on when integration, stochastic lookahead and decision-focused learning are worth their cost.
+
+\begin{table}[t]
+\centering\small
+\caption{Positioning relative to the closest studies.}\label{tab:positioning}
+\resizebox{\textwidth}{!}{\begin{tabular}{p{4.2cm}cccccp{4.2cm}}
+\toprule
+Study & Ageing & Uncertain demand & Routing & Context & Closed loop & Methods compared \\
+\midrule
+\citet{haijema2019improved} & \checkmark & \checkmark & -- & -- & \checkmark & Stock-age rules vs SDP \\
+\citet{broekmeulen2009heuristic} & \checkmark & \checkmark & -- & -- & \checkmark & EWA vs base-stock \\
+\citet{coelho2014optimal}; \citet{alvarez2020formulations} & \checkmark & -- & \checkmark & -- & -- & Exact MILP \\
+\citet{crama2018stochastic} & \checkmark & \checkmark & \checkmark & -- & \checkmark & EV, UL$_\lambda$, decomposition \\
+\citet{he2024robust} & \checkmark & \checkmark & \checkmark & -- & -- & Robust, Benders, ILS \\
+\citet{solyali2012robust} & -- & \checkmark & \checkmark & -- & -- & Robust MILP \\
+\citet{jia2025scenario} & -- & \checkmark & \checkmark & \checkmark & \checkmark & Scenario PTO vs PTO, SAA, DFL \\
+\citet{islam2023optimizing} & -- & \checkmark & \checkmark & \checkmark & -- & DFL prototype \\
+\textbf{This study} & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & Stock-age rules, UL$_\lambda$, robust, scenario PTO, DFL \\
+\bottomrule
+\end{tabular}}
+\end{table}

@@ -1,0 +1,88 @@
+% ============================================================================
+\section{Replenishment policies}\label{sec:policies}
+% ============================================================================
+
+All policies receive the same information each day: the observed age-structured stock $B_t$ and the same contextual forecasts. They differ only in how the forecasts and the stock are turned into deliveries and routes. Table~\ref{tab:policies} summarises the nine policies; parameters marked as tuned are selected on validation episodes only.
+
+\subsection{Shared forecasts}\label{sec:forecasts}
+
+For every store $i$, planning day $t$ and lookahead offset $k\in\{0,\dots,H-1\}$, one LightGBM model \citep{ke2017lightgbm} predicts the mean $\hat\mu_{i,t+k}$ and eleven LightGBM quantile models predict the quantiles $\hat Q_{\tau}(D_{i,t+k}\mid\xi)$ for $\tau\in\{0.05,0.1,0.2,\dots,0.9,0.95\}$ (sorted to avoid crossing). Features are store identity, offset $k$, calendar, announced discount and holiday, temperature forecast, and summaries of the last 1, 7 and 28 days of demand. A forecast scale is $\hat\sigma=(\hat Q_{0.9}-\hat Q_{0.1})/(2z_{0.9})$, and quantiles at other levels are linearly interpolated. Quantile regression of this type is the standard data-driven newsvendor input \citep{ban2019big,huber2019data}.
+
+\subsection{Inventory-control rules with route-second delivery}\label{sec:rules}
+
+These policies represent current replenishment practice: an inventory rule sets the store orders, and the orders are then routed. Deliveries are routed by an exact capacitated vehicle-routing oracle that enumerates all feasible route sets (possible because $n=10$). If the fleet cannot carry all orders, the part exceeding today's median demand is reduced proportionally until a feasible packing exists.
+
+\paragraph{BSP: periodic base-stock.} Stores are served on a fixed cycle of $R\in\{1,2\}$ days (for $R=2$ in two alternating groups). On a delivery day, store $i$ is raised to the order-up-to level $S_{it}=\hat Q_\alpha\big(\sum_{k<R}D_{i,t+k}\big)$ (normal approximation for $R>1$). The inventory position counts all units regardless of age, as in most retail ordering systems \citep{haijema2019improved}.
+
+\paragraph{BSP-EW: base-stock with estimated waste.} Identical to BSP, except that units of the current stock that are expected to expire unsold during the cycle are removed from the inventory position: $q_{it}=(S_{it}-\sum_r B_{irt}+\widehat{EW}_{it})^{+}$, where $\widehat{EW}_{it}$ is computed by projecting the age profile forward under FIFO with the mean forecasts. This is the ``estimated withdrawal and aging'' idea of \citet{broekmeulen2009heuristic}; waste-anticipating base-stock rules of this family were found to be near-optimal among practical stock-age-dependent policies by \citet{haijema2019improved}.
+
+\paragraph{UL$_\lambda$: deliver-up-to-level rule \citep{crama2018stochastic}.} A store is visited when its stock does not cover the current day's demand at service level $\beta$, i.e.\ when $\sum_r B_{irt}<\hat Q_\beta(D_{it})$; it then receives enough to reach the $\alpha$-quantile of the demand of the next $\lambda$ days, net of stock expected to expire. This is the state-dependent ``deliver-up-to-level'' rule that \citet{crama2018stochastic} identify as a simple policy with good performance in some settings; the original paper combines it with its own routing heuristic, whereas here the selected deliveries are routed exactly.
+
+\subsection{Integrated rolling-horizon policies}\label{sec:la}
+
+These policies solve the lookahead MILP of Section~\ref{sec:lookahead} every day with $H=3$ ($H=2$ when $m=2$) and implement day 0. They differ only in the planning demand.
+
+\begin{itemize}[leftmargin=*]
+\item \textbf{LA-Mean} uses the point forecasts $\hat\mu$: the classical predict-then-optimise policy.
+\item \textbf{LA-Quantile} uses $\hat Q_\alpha$ for every store and day. With $\alpha$ tuned on validation episodes, this is a parametric cost-function approximation in the sense of \citet{powell2019unified}: a deterministic lookahead whose inputs are adjusted to perform well under uncertainty.
+\item \textbf{LA-Robust} uses budgeted demand uncertainty \citep{bertsimas2006robust}. Demand on lookahead day $k$ ranges over $[\hat\mu_k,\hat\mu_k+\hat\delta_k]$ with $\hat\delta_k=\hat Q_{0.95}-\hat\mu_k$, and the cumulative scaled deviation of the first $k+1$ days is at most $\Gamma_k=\min\{\Gamma\sqrt{k+1},k+1\}$. The planning path reproduces the worst-case cumulative demand of every prefix, which is the deterministic equivalent shown by \citet{bertsimas2006robust} for inventory systems and used in robust inventory routing \citep{solyali2012robust}. $\Gamma$ is tuned.
+\item \textbf{ScenPO-SS} is the Scenario Predict-then-Optimize method of \citet{jia2025scenario}: ten demand scenarios are sampled from the multi-horizon quantile forecasts (each scenario draws a quantile band uniformly and then draws every store-day value uniformly inside that band), and the single-stage scenario model chooses one delivery and routing plan that minimises the average cost over the scenarios. Two adaptations are needed and disclosed: inventory follows the perishable age-structured dynamics with lost sales instead of the original non-perishable backlogging model, and the quantile model is LightGBM rather than an MQ-RNN, so that all policies use the same forecasts.
+\item \textbf{LA-DFL} (proposed) uses decision-focused planning targets (Section~\ref{sec:dfl}).
+\item \textbf{PI} solves the same lookahead with the realised demand of the next $H$ days. It is a value-of-information reference, not a lower bound.
+\end{itemize}
+
+\begin{table}[t]
+\centering\small
+\caption{Policies compared. All use the same observed stock and the same forecasts.}\label{tab:policies}
+\begin{tabular}{p{2.0cm}p{3.0cm}p{4.3cm}p{3.3cm}}
+\toprule
+Policy & Family & Decision rule & Tuned on validation \\
+\midrule
+BSP & Inventory rule, route second & Periodic base-stock on total stock & Cycle $R$, quantile $\alpha$ \\
+BSP-EW & Inventory rule, route second & Base-stock plus estimated waste \citep{broekmeulen2009heuristic,haijema2019improved} & $R$, $\alpha$ \\
+UL$_\lambda$ & Stochastic PIRP rule & Deliver-up-to-level \citep{crama2018stochastic} & $\lambda$, $\alpha$, $\beta$ \\
+LA-Mean & Rolling-horizon PIRP & Mean forecasts & -- \\
+LA-Quantile & Rolling-horizon PIRP (CFA) & Quantile forecasts & $\alpha$ \\
+LA-Robust & Rolling-horizon PIRP & Budgeted uncertainty \citep{bertsimas2006robust} & $\Gamma$ \\
+ScenPO-SS & Rolling-horizon stochastic PIRP & Scenario PTO \citep{jia2025scenario} & -- (10 scenarios) \\
+LA-DFL & Rolling-horizon PIRP & Decision-focused targets (this paper) & Network weights, early stopping \\
+PI & Reference & Realised demand & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Decision-focused planning targets}\label{sec:dfl}
+
+LA-DFL keeps the deterministic lookahead, which is fast and easy to explain to planners, and learns how much each planning target should deviate from the forecast. For store $i$, planning day $t$ and offset $k$ the target is
+\begin{equation}\label{eq:target}
+\tilde d_{i,t+k}(\theta)=\Big(\hat Q_{\alpha^\star}(D_{i,t+k}\mid\xi)+\hat\sigma_{i,t+k}\,\delta_\theta(\phi_{itk})\Big)^{+},
+\end{equation}
+where $\alpha^\star$ is the quantile level selected for LA-Quantile, and $\delta_\theta$ is a two-layer neural network whose output layer is initialised to zero, so that training starts exactly at the tuned LA-Quantile policy. The input $\phi_{itk}$ contains the forecast features, the scaled mean, scale and 5--95\% range of the forecast, the offset $k$, and the store's current stock by remaining life. The correction can therefore depend on context (e.g.\ promotions, which raise both mean and variance) and on stock age, which neither the forecasts nor a single quantile level capture.
+
+\paragraph{Learning signal.} The visit pattern chosen by the MILP is piecewise constant in the targets, so its gradient carries no information. Given the pattern, however, deliveries are piecewise linear in the targets: each delivery covers the planned demand of its coverage window $W_k$, net of the usable stock projected by FIFO, capped by the remaining shelf room and scaled to the vehicle capacity. We implement this coverage map $q(\tilde d;V)$ as a differentiable layer and evaluate the realised $H$-day FIFO cost of the resulting deliveries under the observed demand with a differentiable simulator. Automatic differentiation then returns
+\begin{equation}\label{eq:grad}
+\nabla_\theta\, C_{\mathrm{FIFO}}\big(q(\tilde d_\theta;V),D\big)=\Big(\frac{\partial \tilde d}{\partial\theta}\Big)^{\!\top}\Big(\frac{\partial q}{\partial \tilde d}\Big)^{\!\top}\nabla_q C_{\mathrm{FIFO}},
+\end{equation}
+whose last factor is the marginal value of a delivery bounded in Proposition~\ref{prop:marginal}, and whose stationary points are characterised in Proposition~\ref{prop:dfl}. In words: if, in hindsight, an extra unit in a store's delivery would have prevented a lost sale, the targets of the days that delivery covered are pushed up; if the extra unit would have been wasted or carried, they are pushed down; and nothing changes when the store was not visited or capacity was binding.
+
+\paragraph{Training.} Training states are the decision epochs visited by the tuned LA-Quantile policy on training episodes. Each epoch re-solves the MILP at the current targets to refresh the visit patterns (a form of solution caching, \citealp{mulamba2021contrastive}), takes Adam steps on the average realised cost of minibatches, and evaluates the closed-loop cost of the current network on the validation episodes; the network with the lowest validation cost is kept, which may be the LA-Quantile starting point. Algorithm~\ref{alg:dfl} summarises the procedure.
+
+\begin{algorithm}[t]
+\caption{Training of decision-focused planning targets (LA-DFL)}\label{alg:dfl}
+\small
+\begin{algorithmic}[1]
+\Require training states $\{(B^{(s)},\xi^{(s)},D^{(s)})\}$ from LA-Quantile runs; tuned level $\alpha^\star$; epochs $E$
+\State initialise $\delta_\theta\equiv 0$; $\theta^\star\gets\theta$; $J^\star\gets$ validation cost of LA-Quantile
+\For{$e=1,\dots,E$}
+  \State for every state $s$: solve the lookahead MILP with targets $\tilde d_\theta^{(s)}$; store visit pattern $V^{(s)}$
+  \For{each minibatch $\mathcal B$}
+    \State $L\gets |\mathcal B|^{-1}\sum_{s\in\mathcal B} C_{\mathrm{FIFO}}\big(q(\tilde d^{(s)}_\theta;V^{(s)}),D^{(s)}\big)$ \Comment{differentiable coverage layer + FIFO simulator}
+    \State $\theta\gets\mathrm{Adam}(\theta,\nabla_\theta L)$
+  \EndFor
+  \State $J\gets$ closed-loop validation cost of LA-DFL with $\theta$; \textbf{if} $J<J^\star$ \textbf{then} $\theta^\star\gets\theta$, $J^\star\gets J$
+\EndFor
+\State \Return $\theta^\star$
+\end{algorithmic}
+\end{algorithm}
+
+Compared with the decision-focused learner of the original submission, three changes are essential. The learner no longer differentiates a heuristic surrogate of a MILP that was in practice never solved; the MILP is solved to a proven gap and only supplies visit patterns. The loss is the realised physical cost rather than regret against a heuristic full-information plan. And training and model selection are performed on the closed-loop system that is evaluated.

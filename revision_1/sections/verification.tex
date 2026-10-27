@@ -1,0 +1,21 @@
+\subsection{Verification of the structural results}\label{sec:verification}
+
+Table~\ref{tab:verification} reports numerical checks of the results in Section~\ref{sec:theory} (script \texttt{verify\_theory.py} in the replication package). Theorem~\ref{thm:fifo}(ii) is checked by solving the recourse a second time with FIFO issuing and greedy service imposed through binary indicator constraints: if the theorem were false, the constrained value would exceed $V_{\mathrm{LP}}$ in some instance. The bound of Proposition~\ref{prop:marginal}(b) is attained in 71\% of the random instances, so it cannot be tightened in general. The physical FIFO cost equals $V_{\mathrm{LP}}$ in 63\% of the random instances; the remaining gap is the value of discarding stock early, which a store does not do in practice. The original submission's claim that age-increasing holding costs alone make every optimal recourse solution FIFO is contradicted by the example given after Theorem~\ref{thm:fifo}.
+
+\begin{table}[t]
+\centering\small
+\caption{Numerical verification of the structural results.}\label{tab:verification}
+\begin{tabular}{p{3.2cm}p{6.6cm}p{4.0cm}}
+\toprule
+Result & Check & Outcome \\
+\midrule
+Theorem~\ref{thm:fifo}(i) & 60 lookahead MILPs ($m\in\{2,3,4\}$, 1 or 5 scenarios) with demand from zero to four times fleet capacity & all feasible, all solved to proven gap \\
+Theorem~\ref{thm:fifo}(ii) & 3,000 random recourse instances ($m\in\{2,3,4\}$, $H\in\{2,\dots,5\}$, random costs); FIFO- and greedy-constrained MILP value vs.\ $V_{\mathrm{LP}}$ & max.\ absolute difference $10^{-6}$ \\
+Theorem~\ref{thm:fifo}(iii) & $V_{\mathrm{LP}}\le C_{\mathrm{FIFO}}$ in the same instances & holds in 3,000/3,000; equality in 63\% \\
+Proposition~\ref{prop:marginal}(a) & dual bounds $[-p_u,p_s]$; subgradient inequality in 9,000 random directions & 3,000/3,000; 9,000/9,000 \\
+Proposition~\ref{prop:marginal}(b) & autograd derivative of $C_{\mathrm{FIFO}}$ within \eqref{eq:marg} & 3,000/3,000; bound attained in 71\% \\
+Proposition~\ref{prop:dfl} & $m=1$, negative-binomial demand (mean 15), SGD on the decision-focused loss & learned target 20.03; empirical 0.8-quantile 20.0; $F(\tilde d)=0.809$ vs.\ $p_u/(p_u+p_s)=0.8$ \\
+Coverage layer & 40 lookahead MILPs; deliveries implied by the visit pattern vs.\ MILP deliveries & 98.7\% of delivered volume reproduced (mean relative $L_1$ deviation 1.3\%) \\
+\bottomrule
+\end{tabular}
+\end{table}

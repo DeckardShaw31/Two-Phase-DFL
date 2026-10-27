@@ -1,2 +1,0 @@
-Baseline_Model,Ours_Model,Mean_Regret_Baseline_pct,Mean_Regret_Ours_pct,Mean_Difference_pct,Wilcoxon_Stat,Wilcoxon_p_value,T_Stat,T_p_value,Significant_p05,Significant_p01
-Ridge_PTO,Two-Phase_DFL (Ours),24.675107696043717,0.0,24.675107696043717,1.0,0.5,1.0,0.24999999999999978,False,False

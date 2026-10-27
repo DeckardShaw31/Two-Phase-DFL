@@ -1,0 +1,70 @@
+% ============================================================================
+\section{Problem description}\label{sec:problem}
+% ============================================================================
+
+\subsection{The periodic-review perishable inventory-routing system}\label{sec:system}
+
+A distributor replenishes a single fresh product at $n$ retail stores $\mathcal{N}=\{1,\dots,n\}$ from a depot $0$. Every morning (day $t$) it decides how much to deliver to each store and how to route a homogeneous fleet of $K$ vehicles of capacity $Q$; each vehicle performs at most one route per day and each store is visited at most once per day. Deliveries arrive before the store opens (zero lead time), as is common for daily fresh-food replenishment. Products arrive fresh and can be sold on $m$ consecutive days, the day of delivery included. Store $i$ can hold at most $C_i$ units at opening (shelf and backroom capacity).
+
+\paragraph{State and stock age.} Let $B_{irt}$ denote the units at store $i$ at the opening of day $t$, before the delivery, that can still be sold on $r$ days including day $t$ ($r=1,\dots,m-1$). The vector $B_t=(B_{irt})$ is the age-structured inventory state observed by the planner. Units with $r=1$ are on their last day.
+
+\paragraph{Daily dynamics.} Given deliveries $q_t=(q_{it})$ and realised demand $D_{it}$, the following happens at each store. (i) Available stock by remaining life is $S_{irt}=B_{irt}$ for $r<m$ and $S_{imt}=q_{it}$. (ii) Demand is served first-in first-out (FIFO), oldest units first. (iii) Unmet demand is lost. (iv) Unsold units with $r=1$ expire. (v) Remaining units are carried overnight and lose one day of remaining life. With sales $w_{irt}=\min\{S_{irt},(D_{it}-\sum_{r'<r}w_{ir't})^{+}\}$, lost sales are $u_{it}=D_{it}-\sum_r w_{irt}$, expired units are $e_{it}=S_{i1t}-w_{i1t}$, and the next state is $B_{i,r,t+1}=S_{i,r+1,t}-w_{i,r+1,t}$ for $r=1,\dots,m-1$. As a robustness check we also simulate partial last-in first-out (LIFO) issuing, in which a fraction of customers picks the freshest units \citep{haijema2014new}.
+
+\paragraph{Costs.} Day $t$ costs
+\begin{equation}\label{eq:daycost}
+  c_t = c^{\mathrm{r}}\,\mathrm{TSP}(\text{routes}_t) + h\sum_{i,r}B_{i,r,t+1} + p_s\sum_i e_{it} + p_u\sum_i u_{it},
+\end{equation}
+where $\mathrm{TSP}(\cdot)$ is the travelled distance, $h$ the holding cost per unit carried overnight, $p_s$ the outdating (waste) cost per expired unit and $p_u$ the lost-sales penalty. Throughout, $h\le p_s<p_u$: carrying a unit one more night is cheaper than discarding it, and a lost sale is the most expensive event.
+
+\paragraph{Information and policies.} Before deciding on day $t$ the planner observes the state $B_t$, the demand history up to day $t-1$, and contextual information about the next days: calendar, announced promotions and holidays, and a weather forecast. A \emph{policy} maps this information to deliveries and routes. The objective is to minimise the expected cost $\mathbb{E}\big[\sum_{t=1}^{T} c_t\big]$ over a horizon of $T$ days. Delivery decisions couple days through stock age and stores through vehicle capacity and route costs; this is what distinguishes the problem from single-store perishable inventory control \citep{nahmias1982perishable,haijema2019improved} and makes it a stochastic perishable inventory-routing problem \citep{crama2018stochastic}.
+
+\subsection{Lookahead model}\label{sec:lookahead}
+
+All integrated policies in Section~\ref{sec:policies} solve, every day, an $H$-day lookahead model and implement only its first day (rolling horizon). The model takes the observed state $B_t$ and one or several planning demand paths $\tilde d^{s}=(\tilde d^{s}_{ik})_{i\in\mathcal N,k=0..H-1}$, $s\in\mathcal S$, as inputs. Its routing part uses a vehicle-assignment formulation with exact route costs. Let $\mathcal R=2^{\mathcal N}$ be the set of store subsets and $\mathrm{TSP}(R)$ the length of an optimal depot-to-depot tour through $R$, precomputed by the Held--Karp recursion \citep{held1962dynamic}. Binary $z_{ivk}$ assigns store $i$ to vehicle $v$ on lookahead day $k$; continuous $y_{Rvk}\ge 0$ selects the route of vehicle $v$; $g_{ivk}\ge 0$ is the load for store $i$ on vehicle $v$; $q_{ik}=\sum_v g_{ivk}$.
+\begin{align}
+  \min\ & \sum_{k,v,R} c^{\mathrm{r}}\mathrm{TSP}(R)\,y_{Rvk} + \frac{1}{|\mathcal S|}\sum_{s\in\mathcal S}\sum_{k,i}\Big(h\sum_{r\ge 2}(S^{s}_{irk}-w^{s}_{irk}-\zeta^{s}_{irk}) \notag\\
+  & \hspace{5.2cm} + p_s\big(S^{s}_{i1k}-w^{s}_{i1k}\big) + p_s\sum_{r\ge2}\zeta^{s}_{irk} + p_u u^{s}_{ik}\Big) \label{eq:obj}\\
+  \text{s.t. }& \textstyle\sum_{R} y_{Rvk}=1,\quad \sum_{R\ni i}y_{Rvk}=z_{ivk},\quad \sum_v z_{ivk}\le 1 \qquad \forall i,v,k, \label{eq:route}\\
+  & g_{ivk}\le \min\{Q,C_i\}\,z_{ivk},\quad \textstyle\sum_i g_{ivk}\le Q \qquad \forall i,v,k,\label{eq:load}\\
+  & S^{s}_{imk}=q_{ik},\quad S^{s}_{ir0}=B_{irt}\ (r<m) \qquad \forall i,r,k,s, \notag\\
+  & S^{s}_{i,r,k+1}=S^{s}_{i,r+1,k}-w^{s}_{i,r+1,k}-\zeta^{s}_{i,r+1,k} \qquad \forall i,r,k,s,\label{eq:age}\\
+  & \textstyle\sum_r w^{s}_{irk}+u^{s}_{ik}=\tilde d^{s}_{ik},\quad w^{s}_{irk}+\zeta^{s}_{irk}\le S^{s}_{irk},\quad \sum_r (S^{s}_{irk}-\zeta^{s}_{irk})\le C_i \qquad \forall i,r,k,s,\label{eq:sales}
+\end{align}
+with all variables non-negative and $z$ binary. Constraint \eqref{eq:route} lets each vehicle choose one route (the empty set has zero cost) whose store set equals the stores assigned to it; \eqref{eq:load} enforces vehicle and shelf capacity; \eqref{eq:age} is the age-structured balance; \eqref{eq:sales} links sales, lost sales and the shelf capacity at opening. $\zeta$ is an excess-disposal slack priced at $p_s$; it is only needed when $|\mathcal S|>1$ (in a deterministic plan stock never exceeds what was planned) and it is never used on day $0$, where the state is known. With $|\mathcal S|=1$ the model is a deterministic rolling-horizon PIRP; with $|\mathcal S|>1$ it is the single-stage scenario model (one routing and delivery plan for all scenarios) that \citet{jia2025scenario} found to perform best. A symmetry-breaking constraint assigns the lowest-indexed visited store to vehicle 1.
+
+\begin{proposition}[Exact routing cost]\label{prop:exact}
+For every binary $z$ satisfying \eqref{eq:route}, the only feasible $y$ sets $y_{R_{vk},v,k}=1$ for $R_{vk}=\{i: z_{ivk}=1\}$. Hence the routing term of \eqref{eq:obj} equals the exact travelled distance of the assigned routes, and the model is an exact MILP formulation of the $H$-day lookahead PIRP in which only the $nKH$ assignment variables are integer.
+\end{proposition}
+
+The proof is in \ref{app:proofs}. Proposition~\ref{prop:exact} matters computationally: with ten stores the model has $2^{10}KH$ continuous route columns but only $nKH$ binaries, whereas the arc-based vehicle-indexed formulation used in the original submission could not be solved within its time budget. Because only day 0 of each plan is implemented, the experiments impose integrality on the day-0 assignment and relax it on later lookahead days; the relaxed routing term is then a convex lower estimate of future travel cost. With this choice HiGHS \citep{huangfu2018parallelizing} proves a gap of at most 0.5\% for every decision within the time limit (Section~\ref{sec:computation}); in a pilot on four episodes, imposing integrality on all lookahead days changed episode costs by between $-1.5\%$ and $+3.3\%$ at three to five times the solution time and with time-limit stops. Day-0 routes of every implemented decision are additionally re-optimised by exact enumeration of all feasible route sets.
+
+\subsection{Structural properties}\label{sec:theory}
+
+The results below connect the lookahead model with the physical FIFO system and justify the learning signal used in Section~\ref{sec:dfl}. Fix one store, a delivery plan $q=(q_0,\dots,q_{H-1})$, an initial state $B$ and a demand path $d$. Let $C_{\mathrm{FIFO}}(q;d)$ be the inventory cost (holding, waste and lost sales) of the physical system above, and let $V_{\mathrm{LP}}(q;d)$ be the optimal value of the \emph{recourse LP}: constraints \eqref{eq:age}--\eqref{eq:sales} for one scenario with $q$ fixed, the issuing order left free and early disposal $\zeta$ allowed.
+
+\begin{theorem}[Complete recourse and FIFO optimality]\label{thm:fifo}
+(i) For any state with $\sum_r B_{ir}\le C_i$ and any non-negative planning demand, the lookahead MILP is feasible and its optimal value is finite. (ii) For fixed deliveries, the recourse LP has an optimal solution in which every day's sales follow FIFO and demand is served whenever stock is available. (iii) $V_{\mathrm{LP}}(\cdot;d)$ is convex and piecewise linear, and $V_{\mathrm{LP}}(q;d)\le C_{\mathrm{FIFO}}(q;d)$, with equality whenever early disposal is not profitable along the FIFO trajectory.
+\end{theorem}
+
+Part (ii) corrects a claim of the original submission, which stated that age-increasing holding costs make every optimal solution FIFO without a disposal option. That statement is false: if an expiring unit and a fresh unit are on the shelf and only one more unit will ever be sold, selling the fresh unit and letting the old one expire saves the fresh unit's holding cost. Allowing disposal at cost $p_s$ restores the exchange argument (the younger unit can always replicate the older unit's path) and makes the recourse a convex relaxation of the physical system.
+
+\begin{proposition}[Marginal value of a delivery]\label{prop:marginal}
+(a) The dual multiplier $\pi_k$ of the fresh-stock constraint $S_{imk}=q_k$ is a subgradient of $V_{\mathrm{LP}}$ with respect to $q_k$, and $-p_u\le \pi_k\le p_s$. (b) If $h\le p_s$, $C_{\mathrm{FIFO}}(\cdot;d)$ is piecewise linear and Lipschitz, and its one-sided partial derivatives satisfy
+\begin{equation}\label{eq:marg}
+  -p_u\ \le\ \frac{\partial C_{\mathrm{FIFO}}}{\partial q_k}\ \le\ p_s + (H-1-k)\,h .
+\end{equation}
+\end{proposition}
+
+Proposition~\ref{prop:marginal} states the familiar newsvendor logic in a multi-period, age-structured form: an extra delivered unit can at most prevent one lost sale, and at worst it is carried to the end of the horizon or wasted (possibly by displacing a later delivery). The asymmetry $p_u\gg p_s$ is what makes point forecasts a poor input for perishable replenishment. The bound in (b) is tight (Section~\ref{sec:verification}).
+
+The learned planning targets of Section~\ref{sec:dfl} enter the lookahead through the deliveries they induce. For a fixed visit pattern, a delivery on day $k$ covers the planned demand of the days until the next visit, limited by shelf life and horizon, net of the stock that will still be usable. Let $W_k$ denote this coverage window.
+
+\begin{proposition}[Decision-focused stationarity]\label{prop:dfl}
+Fix the visit pattern and consider planning targets $\tilde d_j$ at which no capacity binds and the coverage map is differentiable. Then $\partial q_k/\partial\tilde d_j\in\{0,1\}$, with value one exactly when day $j$ lies in the coverage window $W_k$ and is not already covered by planned stock, and for such $j$
+\begin{equation}\label{eq:stationary}
+\frac{\partial}{\partial \tilde d_j}\,\mathbb E\big[C_{\mathrm{FIFO}}(q(\tilde d);D)\mid\xi\big]=\mathbb E\Big[\frac{\partial C_{\mathrm{FIFO}}}{\partial q_{k(j)}}\,\Big|\,\xi\Big],
+\end{equation}
+where $k(j)$ is the visit covering day $j$. A stationary point of the decision-focused objective therefore satisfies the first-order optimality condition of the stochastic program in which only the delivery quantities of the fixed visit pattern are optimised. With a single-day shelf life, \eqref{eq:stationary} vanishes exactly at the perishable newsvendor quantile, $F_{D\mid\xi}(\tilde d)=p_u/(p_u+p_s)$.
+\end{proposition}
+
+Proposition~\ref{prop:dfl} clarifies what decision-focused training can and cannot do. It can correct the safety stock embedded in deterministic plans, store by store and context by context, which is where the cost asymmetry and stock age act; it does not optimise visit days, which are left to the MILP. It also explains the relation to the estimate-then-optimise literature: when the forecasting model is well specified and decisions are optimised against the full predictive distribution, integrated training has no first-order advantage \citep{hu2022fast,elmachtoub2023estimate}; a gain is possible only when the downstream model is a misspecified deterministic approximation, as all rolling-horizon PIRP policies are.

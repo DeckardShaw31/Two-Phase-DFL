@@ -1,0 +1,28 @@
+{
+  "T1_instances": 60,
+  "T1_all_feasible": true,
+  "T1_status_counts": {
+    "0": 60
+  },
+  "T2_instances": 3000,
+  "T2_max_abs_diff_fifo_constrained_vs_lp": 1.0000000258969521e-06,
+  "T2_lp_le_fifo_all": true,
+  "T2_share_equal": 0.634,
+  "T2_median_rel_gap": 0.0,
+  "T2_mean_rel_gap": 0.06297101854735095,
+  "P3_dual_bounds_all": true,
+  "P3_subgradient_all": true,
+  "P3_fifo_grad_bounds_all": true,
+  "P4": {
+    "learned_target": 20.03173828125,
+    "empirical_quantile_at_critical": 20.0,
+    "critical_ratio": 0.8,
+    "cdf_at_learned": 0.8086
+  },
+  "P5": {
+    "max_abs_diff": 12.960650656102992,
+    "median_max_abs_diff": 0.37221684489774454,
+    "mean_rel_l1": 0.013357595431067229,
+    "share_exact(<0.5 unit)": 0.5
+  }
+}

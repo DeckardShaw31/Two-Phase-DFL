@@ -1,0 +1,120 @@
+{
+  "config": {
+    "name": "fleet_loose",
+    "layout": "R1",
+    "n_stores": 10,
+    "n_vehicles": 2,
+    "fleet_ratio": 1.6,
+    "store_cap_days": 3.0,
+    "shelf_life": 3,
+    "horizon": 3,
+    "h": 1.0,
+    "p_waste": 5.0,
+    "p_lost": 20.0,
+    "c_route": 1.0,
+    "nb_size": 8.0,
+    "lifo_share": 0.0,
+    "n_train": 100,
+    "n_val": 20,
+    "n_test": 40
+  },
+  "vehicle_cap": 152.0,
+  "store_cap": [
+    58.0,
+    71.0,
+    66.0,
+    43.0,
+    45.0,
+    69.0,
+    33.0,
+    68.0,
+    67.0,
+    53.0
+  ],
+  "mean_store_demand": [
+    19.331801337038698,
+    23.555368735061805,
+    21.868011204623382,
+    14.202020637764731,
+    15.037435200706168,
+    22.890415329959513,
+    11.155006942978378,
+    22.68219998088156,
+    22.31114225303566,
+    17.536628324966266
+  ],
+  "episode_seeds": {
+    "train": "1000+e",
+    "val": "5000+e",
+    "test": "9000+e"
+  },
+  "chosen": {
+    "BSP": {
+      "kind": "bsp",
+      "R": 1,
+      "alpha": 0.95
+    },
+    "BSP-EW": {
+      "kind": "bsp_ew",
+      "R": 1,
+      "alpha": 0.95
+    },
+    "UL": {
+      "kind": "ul",
+      "lam": 1,
+      "alpha": 0.95,
+      "beta": 0.9
+    },
+    "PTO-Q": {
+      "kind": "lookahead",
+      "time_limit": 20.0,
+      "gap": 0.005,
+      "integer_days": 1,
+      "target": "quantile",
+      "param": 0.9
+    },
+    "Robust": {
+      "kind": "lookahead",
+      "time_limit": 20.0,
+      "gap": 0.005,
+      "integer_days": 1,
+      "target": "robust",
+      "param": 1.0
+    },
+    "PTO-Mean": {
+      "kind": "lookahead",
+      "time_limit": 20.0,
+      "gap": 0.005,
+      "integer_days": 1,
+      "target": "mean"
+    },
+    "ScenPO-SS": {
+      "kind": "lookahead",
+      "target": "scenario",
+      "n_scen": 10,
+      "time_limit": 60.0,
+      "gap": 0.005,
+      "integer_days": 1
+    },
+    "PI": {
+      "kind": "lookahead",
+      "time_limit": 20.0,
+      "gap": 0.005,
+      "integer_days": 1,
+      "target": "pi"
+    },
+    "DFL": {
+      "kind": "lookahead",
+      "time_limit": 20.0,
+      "gap": 0.005,
+      "integer_days": 1,
+      "target": "dfl"
+    }
+  },
+  "reused_from": null,
+  "python": "3.12.9 (tags/v3.12.9:fdb8142, Feb  4 2025, 15:27:58) [MSC v.1942 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "numpy": "2.5.4",
+  "pandas": "3.1.0",
+  "runtime_sec": 1600.7416489124298
+}

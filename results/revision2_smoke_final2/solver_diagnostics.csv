@@ -1,5 +1,0 @@
-method,episode_id,training_seed,solver_name,solver_optimal,solver_status,solver_message,solver_mip_gap,solver_mip_dual_bound,solver_mip_node_count,solver_time_sec,solver_used_heuristic_fallback,solver_fifo_parity_max_abs_error
-LightGBM_PTO,340,0,HiGHS MILP attempt + LP-guided feasible incumbent,False,1.0,Feasible LP-guided constructive solution; optimality not certified,0.9673009845963647,443.65735546390897,0.0,0.2792860000045039,True,0.0
-LightGBM_Quantile_PTO,340,0,HiGHS MILP attempt + LP-guided feasible incumbent,False,1.0,Feasible LP-guided constructive solution; optimality not certified,0.8700887859324581,2933.192574695646,0.0,0.30012480000732467,True,0.0
-Crama_UL_lambda_adaptation,340,0,nearest-neighbor packing + 2-opt routing heuristic,False,,,,,,0.004282899986719713,False,
-Two-Phase_DFL,340,101,HiGHS MILP attempt + LP-guided feasible incumbent,False,1.0,Feasible LP-guided constructive solution; optimality not certified,0.9754504236995315,484.88994807139943,0.0,0.2507118000066839,True,0.0

@@ -15,16 +15,28 @@ env/
 *.swp
 *.swo
 
-# Internal Agent & Workspace Scratch
+# Internal agent scratch and caches
 .agents/
 .licenses/
 .pytest_cache/
 .ruff_cache/
-ORIGINAL_REQUEST.md
-plan.md
-plan_brainstorm.md
 
-# Manuscript and LaTeX directory
+# Regenerable experiment cache (episodes and fitted forecasters)
+results/cache/
+
+# LaTeX build artefacts
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.toc
+*.spl
+
+# Rejected submission and old replication archive (kept locally, not versioned)
 paper/
 supplementary_material/
 *.zip
