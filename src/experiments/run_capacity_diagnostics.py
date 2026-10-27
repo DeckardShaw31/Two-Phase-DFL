@@ -1,3 +1,4 @@
+# HISTORICAL: superseded legacy experiment script. Do not use its outputs as evidence for the revised manuscript; see src/experiments/LEGACY_README.md and use run_revision_benchmark.py.
 """
 Period-Level Capacity Diagnostics for Perishable Inventory-Routing.
 

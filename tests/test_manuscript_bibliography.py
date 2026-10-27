@@ -95,7 +95,7 @@ def test_manuscript_structure_and_citations():
     # Check structural sections
     expected_sections = [
         r"\section{Introduction}",
-        r"\section{Literature Review and Methodological Positioning}",
+        r"\section{Literature Review and Operational Positioning}",
         r"\section{Mathematical Formulation and Bilevel Recourse Reformulation}",
         r"\section{End-to-End Decision-Focused Learning Methodology}",
         r"\section{Experimental Setup and Benchmark Suite}",

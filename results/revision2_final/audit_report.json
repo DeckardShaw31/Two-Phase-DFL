@@ -1,0 +1,74 @@
+{
+  "run_directory": "C:\\Users\\proin\\Desktop\\NCKH\\Q1\\End-to-End Decision-Focused Learning for Perishable Inventory-Routing under Asymmetric Spoilage and Stockout Costs\\results\\revision2_final",
+  "protocol_version": "revision2-primary-2026-10-27",
+  "checks_passed": true,
+  "checks": {
+    "expected_methods_present": true,
+    "all_methods_cover_test_episodes": true,
+    "all_60_test_episodes": true,
+    "dfl_has_three_seeds_per_episode": true,
+    "cost_decomposition_error_below_1e-6": true,
+    "spoilage_components_reconcile_below_1e-6": true,
+    "fill_rate_in_unit_interval": true,
+    "forecast_plan_fifo_parity_below_1e-4": true,
+    "dataset_hashes_match": true,
+    "paired_primary_tests_complete": true
+  },
+  "method_episode_counts": {
+    "Crama_UL_lambda_adaptation": 60,
+    "LightGBM_PTO": 60,
+    "LightGBM_Quantile_PTO": 60,
+    "Two-Phase_DFL": 60
+  },
+  "uncovered_test_ids": {
+    "Crama_UL_lambda_adaptation": [],
+    "LightGBM_PTO": [],
+    "LightGBM_Quantile_PTO": [],
+    "Two-Phase_DFL": []
+  },
+  "cost_decomposition_max_abs_error": 0.0,
+  "spoilage_component_max_abs_error": 0.0,
+  "fifo_parity_max_abs_error": 0.0,
+  "evaluation_solver_calls": 360,
+  "evaluation_solver_fallback_calls": 300,
+  "evaluation_solver_optimal_calls": 0,
+  "training_solver_calls": 2470,
+  "training_milp_requested_calls": 1534,
+  "training_solver_fallback_calls": 1534,
+  "training_solver_optimal_calls": 936,
+  "dataset_hash_mismatches": [],
+  "paired_primary_tests": [
+    {
+      "outcome": "total_cost",
+      "comparison": "Two-Phase_DFL minus LightGBM_PTO",
+      "n_independent_episodes": 60,
+      "mean_paired_difference": 56.895054311437704,
+      "paired_sd": 292.3250868007681,
+      "bootstrap_95ci_low": -14.184723128304881,
+      "bootstrap_95ci_high": 129.13884984404956,
+      "paired_t_p_raw": 0.1369950361707596,
+      "inference_status": "paired inference computed",
+      "holm_adjusted_p": 0.1369950361707596,
+      "primary_family": "two prespecified total-cost comparisons"
+    },
+    {
+      "outcome": "total_cost",
+      "comparison": "Two-Phase_DFL minus Crama_UL_lambda_adaptation",
+      "n_independent_episodes": 60,
+      "mean_paired_difference": -263.253991267225,
+      "paired_sd": 309.8343423555547,
+      "bootstrap_95ci_low": -340.0277261594762,
+      "bootstrap_95ci_high": -183.37485997437864,
+      "paired_t_p_raw": 1.3771379017334163e-08,
+      "inference_status": "paired inference computed",
+      "holm_adjusted_p": 2.7542758034668327e-08,
+      "primary_family": "two prespecified total-cost comparisons"
+    }
+  ],
+  "summary_methods": [
+    "Crama_UL_lambda_adaptation",
+    "LightGBM_PTO",
+    "LightGBM_Quantile_PTO",
+    "Two-Phase_DFL"
+  ]
+}

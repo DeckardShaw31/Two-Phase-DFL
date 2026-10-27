@@ -1,3 +1,4 @@
+# HISTORICAL: superseded legacy experiment script. Do not use its outputs as evidence for the revised manuscript; see src/experiments/LEGACY_README.md and use run_revision_benchmark.py.
 """
 Comprehensive Benchmark Execution Harness for Perishable Inventory-Routing (PIRP).
 
@@ -145,13 +146,19 @@ def canonicalize_model_name(raw_name: str) -> str:
 
 
 def load_dataset(
-    train_path: str = "data/processed/demand_features_train.csv",
-    val_path: str = "data/processed/demand_features_val.csv",
-    test_path: str = "data/processed/demand_features_test.csv",
-    params_path: str = "data/processed/params_config.json",
-    network_path: str = "data/processed/network_solomon_c1.json",
+    train_path: str | None = None,
+    val_path: str | None = None,
+    test_path: str | None = None,
+    params_path: str | None = None,
+    network_path: str | None = None,
+    data_dir: str = "data/processed",
 ):
     """Loads all split datasets and configuration."""
+    train_path = train_path or os.path.join(data_dir, "demand_features_train.csv")
+    val_path = val_path or os.path.join(data_dir, "demand_features_val.csv")
+    test_path = test_path or os.path.join(data_dir, "demand_features_test.csv")
+    params_path = params_path or os.path.join(data_dir, "params_config.json")
+    network_path = network_path or os.path.join(data_dir, "network_solomon_c1.json")
     with open(params_path, "r") as f:
         config = json.load(f)
 

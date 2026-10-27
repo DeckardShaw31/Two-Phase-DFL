@@ -1,13 +1,17 @@
 """
 Multi-Period Perishable Inventory-Routing Problem (PIRP) Mathematical Model.
 
-Formulates and solves the PIRP using HiGHS via scipy.optimize (milp and linprog).
+Formulates the PIRP using HiGHS via scipy.optimize (milp and linprog).
 Supports:
-  1. Discrete MILP mode (x in {0, 1})
+  1. Discrete routing with an explicit choice between MILP and a checked heuristic
   2. Continuous LP relaxation mode (x in [0, 1])
   3. FIFO perishable inventory age tracking (tau in {2, 3, 5})
   4. Complete recourse (emergency stockout y_pos, spoilage disposal y_neg)
-  5. Exact cost breakdown: C_route, C_hold, C_spoil, C_stock, C_total.
+  5. Cost breakdown: C_route, C_hold, C_spoil, C_stock, C_total.
+
+Discrete solves use a constructive heuristic by default. Set ``use_milp=True``
+to invoke HiGHS branch-and-cut; check the returned solver diagnostics before
+claiming optimality.
 """
 
 from dataclasses import dataclass
@@ -39,6 +43,12 @@ class PIRPSolution:
     y_neg: np.ndarray          # Shape (N, T)
     solve_time_sec: float
     is_lp_relaxation: bool
+    solver_name: str = ""
+    mip_gap: float | None = None
+    mip_dual_bound: float | None = None
+    mip_node_count: int | None = None
+    is_optimal: bool = False
+    used_heuristic_fallback: bool = False
 
 
 class PIRPModel:
@@ -61,6 +71,7 @@ class PIRPModel:
         stockout_penalty_pu: float = 20.0,
         distance_matrix: np.ndarray | None = None,
         continuous_relaxation: bool = False,
+        initial_inventory: np.ndarray | None = None,
     ):
         self.N = num_stores
         self.T = horizon_T
@@ -73,6 +84,20 @@ class PIRPModel:
         self.ps = float(spoilage_penalty_ps)
         self.pu = float(stockout_penalty_pu)
         self.continuous_relaxation = continuous_relaxation
+        self.solver_diagnostics: list[dict[str, object]] = []
+        if initial_inventory is None:
+            self.initial_inventory = np.zeros((self.N, self.tau - 1), dtype=np.float64)
+        else:
+            self.initial_inventory = np.asarray(initial_inventory, dtype=np.float64)
+            if self.initial_inventory.shape != (self.N, self.tau - 1):
+                raise ValueError(
+                    f"initial_inventory must have shape ({self.N}, {self.tau - 1}), "
+                    f"got {self.initial_inventory.shape}"
+                )
+            if np.any(self.initial_inventory < 0) or np.any(~np.isfinite(self.initial_inventory)):
+                raise ValueError("initial_inventory must contain finite nonnegative quantities")
+            if np.any(self.initial_inventory.sum(axis=1) > self.Ci + 1e-8):
+                raise ValueError("initial inventory exceeds store capacity")
 
         # Setup distance matrix (N+1 x N+1)
         if distance_matrix is not None:
@@ -243,6 +268,7 @@ class PIRPModel:
         eq_cols = []
         eq_vals = []
         eq_rhs = []
+        self._initial_rhs_indices: dict[tuple[int, int], int] = {}
         eq_count = 0
 
         # Inequality constraints: A_ub * z <= b_ub
@@ -405,6 +431,8 @@ class PIRPModel:
                 # If t == 0: I[i, 0, a] + w[i, 0, a] = I_init[i, a-1] (default 0)
                 # If t > 0:  I[i, t, a] + w[i, t, a] - I[i, t-1, a-1] = 0
                 for a in range(2, self.tau):
+                    if t == 0:
+                        self._initial_rhs_indices[(i - 1, a - 2)] = eq_count
                     eq_rows.append(eq_count)
                     eq_cols.append(self.I_indices[(i, t, a)])
                     eq_vals.append(1.0)
@@ -425,6 +453,8 @@ class PIRPModel:
                 # (c) Oldest Inventory & Spoilage Recourse (a = tau):
                 # If t == 0: y_neg[i, 0] + w[i, 0, tau] = I_init[i, tau-1] (default 0)
                 # If t > 0:  y_neg[i, t] + w[i, t, tau] - I[i, t-1, tau-1] = 0
+                if t == 0:
+                    self._initial_rhs_indices[(i - 1, self.tau - 2)] = eq_count
                 eq_rows.append(eq_count)
                 eq_cols.append(self.y_neg_indices[(i, t)])
                 eq_vals.append(1.0)
@@ -520,7 +550,10 @@ class PIRPModel:
         b_l = np.empty(self._total_constrs, dtype=np.float64)
         b_u = np.empty(self._total_constrs, dtype=np.float64)
 
-        b_l[: self.static_eq_count] = self._b_eq_template[: self.static_eq_count]
+        static_eq_rhs = np.array(self._b_eq_template[: self.static_eq_count], copy=True)
+        for (store_idx, age_idx), row_idx in self._initial_rhs_indices.items():
+            static_eq_rhs[row_idx] = self.initial_inventory[store_idx, age_idx]
+        b_l[: self.static_eq_count] = static_eq_rhs
         # Demand rows are ordered by t in 0..T-1, then i in 1..N -> demand.T.ravel()
         demand_flat = demand.T.ravel()
         b_l[self.static_eq_count : self._total_eq] = demand_flat
@@ -763,6 +796,7 @@ class PIRPModel:
         cost_vector: np.ndarray | None = None,
         time_limit_sec: float | None = None,
         mip_rel_gap: float = 0.05,
+        use_milp: bool = False,
     ) -> PIRPSolution:
         """
         Solves the PIRP instance for the given demand matrix.
@@ -771,7 +805,9 @@ class PIRPModel:
             demand: Matrix of shape (N, T).
             cost_vector: Optional custom objective vector (for DFL/SPO+). Defaults to self.base_c.
             time_limit_sec: Solver time limit in seconds.
-            mip_rel_gap: Relative MIP optimality gap tolerance (default 0.05 = 5%).
+            mip_rel_gap: Requested relative MIP gap when ``use_milp`` is true.
+            use_milp: Invoke HiGHS MILP when true; otherwise return a feasibility-checked
+                constructive heuristic for discrete routing decisions.
 
         Returns:
             PIRPSolution containing extracted decisions, costs, and solver diagnostics.
@@ -806,14 +842,21 @@ class PIRPModel:
             obj_val = float(res.fun) if success else 0.0
             msg = res.message
             status = int(res.status)
+            solver_name = "HiGHS LP"
+            mip_gap = None
+            mip_dual_bound = None
+            mip_node_count = None
+            is_optimal = success
+            used_heuristic_fallback = False
         else:
-            # Discrete MILP solve via LP-guided 2-opt integer decomposition + optional HiGHS branch-and-cut polish
+            # The construction heuristic is a fast feasible candidate, not an optimality proof.
             z_heur, obj_heur = self._construct_integer_solution(demand, c)
 
-            if mip_rel_gap < 0.02:
+            if use_milp:
                 constraints = LinearConstraint(A_sparse, b_l, b_u)
-                eff_time_limit = min(time_limit_sec, 0.06) if time_limit_sec is not None else 0.06
-                options = {"disp": False, "mip_rel_gap": mip_rel_gap, "time_limit": eff_time_limit}
+                options = {"disp": False, "mip_rel_gap": mip_rel_gap}
+                if time_limit_sec is not None:
+                    options["time_limit"] = time_limit_sec
                 res = milp(
                     c=c,
                     constraints=constraints,
@@ -821,31 +864,68 @@ class PIRPModel:
                     integrality=self.integrality,
                     options=options,
                 )
-                has_sol = res.x is not None
-                success_milp = bool(res.success) or (res.status in (0, 1) and has_sol)
-                if has_sol and success_milp:
+                has_sol = res.x is not None and np.all(np.isfinite(res.x))
+                if has_sol:
                     z_milp = res.x
                     obj_milp = float(res.fun) if res.fun is not None else float(np.dot(c, z_milp))
                 else:
                     z_milp = z_heur
                     obj_milp = float("inf")
+                mip_gap = float(res.mip_gap) if getattr(res, "mip_gap", None) is not None else None
+                mip_dual_bound = float(res.mip_dual_bound) if getattr(res, "mip_dual_bound", None) is not None else None
+                mip_node_count = int(res.mip_node_count) if getattr(res, "mip_node_count", None) is not None else None
+                solver_name = "HiGHS MILP"
             else:
                 z_milp = z_heur
                 obj_milp = float("inf")
+                res = None
+                mip_gap = None
+                mip_dual_bound = None
+                mip_node_count = None
+                solver_name = "LP-guided constructive heuristic"
+
+            # Reject a purported incumbent if it violates a model constraint.
+            def is_feasible(z: np.ndarray) -> bool:
+                if not np.all(np.isfinite(z)):
+                    return False
+                lhs = A_sparse @ z
+                if np.any(lhs < b_l - 1e-5) or np.any(lhs > b_u + 1e-5):
+                    return False
+                if np.any(z < self.lb - 1e-5) or np.any(z > self.ub + 1e-5):
+                    return False
+                if not self.continuous_relaxation and np.any(np.abs(z[self._x_idx_list] - np.rint(z[self._x_idx_list])) > 1e-5):
+                    return False
+                return True
+
+            heuristic_feasible = is_feasible(z_heur)
+            milp_feasible = use_milp and res is not None and res.x is not None and is_feasible(res.x)
 
             elapsed = time.perf_counter() - start_t
-            if obj_heur <= obj_milp:
+            prefer_heuristic = heuristic_feasible and (
+                not milp_feasible
+                or (res is not None and res.status != 0 and obj_heur <= obj_milp + 1e-8)
+            )
+            if prefer_heuristic:
                 z_sol = z_heur
                 obj_val = obj_heur
                 success = True
-                status = 0
-                msg = "Optimal integer solution constructed via LP-guided 2-opt decomposition"
+                status = int(res.status) if res is not None else 1
+                msg = "Feasible LP-guided constructive solution; optimality not certified"
+                solver_name = (
+                    "HiGHS MILP attempt + LP-guided feasible incumbent"
+                    if res is not None
+                    else "LP-guided constructive heuristic"
+                )
+                used_heuristic_fallback = True
+                is_optimal = False
             else:
                 z_sol = z_milp
                 obj_val = obj_milp
-                success = True
-                status = int(res.status)
-                msg = res.message if hasattr(res, "message") else str(res.status)
+                success = bool(milp_feasible)
+                status = int(res.status) if res is not None else 4
+                msg = str(res.message) if res is not None else "No feasible integer solution found"
+                used_heuristic_fallback = False
+                is_optimal = bool(milp_feasible and res.status == 0)
 
         # Vectorized extraction of structured decisions
         x_routes = np.zeros((self.N + 1, self.N + 1, self.K, self.T), dtype=np.float64)
@@ -870,7 +950,7 @@ class PIRPModel:
         stockout_cost = float(self.pu * np.sum(y_pos))
         total_cost = routing_cost + holding_cost + spoilage_cost + stockout_cost
 
-        return PIRPSolution(
+        solution = PIRPSolution(
             success=success,
             status=status,
             message=msg,
@@ -889,7 +969,24 @@ class PIRPModel:
             y_neg=y_neg,
             solve_time_sec=elapsed,
             is_lp_relaxation=self.continuous_relaxation,
+            solver_name=solver_name,
+            mip_gap=mip_gap,
+            mip_dual_bound=mip_dual_bound,
+            mip_node_count=mip_node_count,
+            is_optimal=is_optimal,
+            used_heuristic_fallback=used_heuristic_fallback,
         )
+        self.solver_diagnostics.append({
+            "success": bool(solution.success),
+            "status": int(solution.status),
+            "solver_name": solution.solver_name,
+            "mip_gap": solution.mip_gap,
+            "mip_dual_bound": solution.mip_dual_bound,
+            "is_optimal": bool(solution.is_optimal),
+            "used_heuristic_fallback": bool(solution.used_heuristic_fallback),
+            "solve_time_sec": float(solution.solve_time_sec),
+        })
+        return solution
 
 
 def solve_pirp(
@@ -905,6 +1002,8 @@ def solve_pirp(
     store_capacity_Ci: float = 70.0,
     time_limit_sec: float | None = None,
     mip_rel_gap: float = 0.05,
+    initial_inventory: np.ndarray | None = None,
+    use_milp: bool = False,
 ) -> PIRPSolution:
     """Helper function to instantiate and solve a PIRP instance."""
     N, T = demand.shape
@@ -913,6 +1012,7 @@ def solve_pirp(
         horizon_T=T,
         distance_matrix=distance_matrix,
         continuous_relaxation=continuous_relaxation,
+        initial_inventory=initial_inventory,
         shelf_life_tau=shelf_life_tau,
         holding_cost_h=holding_cost_h,
         aging_surcharge_eps=aging_surcharge_eps,
@@ -921,4 +1021,9 @@ def solve_pirp(
         vehicle_capacity_Q=vehicle_capacity_Q,
         store_capacity_Ci=store_capacity_Ci,
     )
-    return model.solve(demand, time_limit_sec=time_limit_sec, mip_rel_gap=mip_rel_gap)
+    return model.solve(
+        demand,
+        time_limit_sec=time_limit_sec,
+        mip_rel_gap=mip_rel_gap,
+        use_milp=use_milp,
+    )

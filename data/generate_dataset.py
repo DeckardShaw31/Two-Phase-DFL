@@ -2,13 +2,11 @@
 data/generate_dataset.py
 Reproducible Data Generation and Preprocessing Pipeline for Multi-Period Perishable Inventory-Routing.
 
-Combines:
-1. Empirical retail perishable demand calibration (volatility, day-of-week seasonality, 
-   trend, promotion events, weather proxies, autoregressive persistence, lag & rolling features).
-2. Standard Solomon VRPTW benchmark spatial topologies (C1: Clustered, R1: Random Uniform, 
-   RC1: Random-Clustered) with verified Euclidean distance matrices.
-3. System cost and operational parameter configurations (shelf life, holding costs, 
-   asymmetric spoilage/stockout penalties, vehicle/depot capacities).
+Creates a synthetic evaluation environment with hand-specified demand heterogeneity,
+weekly seasonality, promotions, hidden weather shocks, and autoregressive noise. No
+M5 observations or empirical demand calibration are used. The network uses ten-store
+Solomon-derived spatial layouts; time windows are not modeled. Inventory and cost
+parameters are explicit inputs to the generated benchmark.
 """
 
 import argparse
@@ -20,15 +18,15 @@ import numpy as np
 import pandas as pd
 
 # -----------------------------------------------------------------------------
-# 1. CANONICAL SOLOMON VRPTW BENCHMARK TOPOLOGY COORDINATES (Depot + 10 Stores)
+# 1. SOLOMON-DERIVED SPATIAL LAYOUTS (Depot + 10 Stores; no time windows)
 # -----------------------------------------------------------------------------
-# Standard coordinates calibrated from canonical Solomon VRPTW instances:
+# Coordinates selected from Solomon benchmark instances:
 # Node 0: Central Distribution Depot
 # Nodes 1..10: Regional Retail Stores (N=10)
 
 SOLOMON_TOPOLOGIES = {
     "C1": {
-        "description": "Clustered customer topology (calibrated from Solomon C101)",
+        "description": "Clustered customer layout selected from Solomon C101",
         "depot": [40.0, 50.0],
         "customers": [
             [45.0, 68.0],  # Store 1
@@ -44,7 +42,7 @@ SOLOMON_TOPOLOGIES = {
         ],
     },
     "R1": {
-        "description": "Random uniform customer topology (calibrated from Solomon R101)",
+        "description": "Random customer layout selected from Solomon R101",
         "depot": [35.0, 35.0],
         "customers": [
             [41.0, 49.0],  # Store 1
@@ -60,7 +58,7 @@ SOLOMON_TOPOLOGIES = {
         ],
     },
     "RC1": {
-        "description": "Random-Clustered hybrid topology (calibrated from Solomon RC101)",
+        "description": "Random-clustered customer layout selected from Solomon RC101",
         "depot": [40.0, 50.0],
         "customers": [
             [25.0, 85.0],  # Store 1 (Cluster A)
@@ -133,7 +131,7 @@ def verify_distance_matrix(dist_matrix: list[list[float]]) -> bool:
 
 def build_network_topology_dict(topology_name: str) -> dict:
     """
-    Builds the structured dictionary for a Solomon VRPTW topology.
+    Builds a spatial-network dictionary from selected Solomon customer coordinates.
     """
     topo_info = SOLOMON_TOPOLOGIES[topology_name]
     depot_coord = topo_info["depot"]
@@ -162,10 +160,10 @@ def build_network_topology_dict(topology_name: str) -> dict:
 
 
 # -----------------------------------------------------------------------------
-# 2. CALIBRATED EMPIRICAL RETAIL PERISHABLE DEMAND SIMULATION
+# 2. HAND-SPECIFIED SYNTHETIC RETAIL PERISHABLE DEMAND SIMULATION
 # -----------------------------------------------------------------------------
 
-# Store baseline volume profiles (calibrated to grocery retail stores)
+# Illustrative synthetic store volume profiles (not empirically calibrated)
 STORE_BASELINES = {
     1: {"base_mean": 22.0, "noise_scale": 2.2},
     2: {"base_mean": 17.5, "noise_scale": 1.9},
@@ -189,6 +187,7 @@ def simulate_retail_demand_series(
     total_days: int = 1028,
     warmup_days: int = 28,
     seed: int = 42,
+    calendar_start_day: int = 0,
 ) -> pd.DataFrame:
     """
     Simulates multi-store continuous daily perishable retail demand series.
@@ -205,10 +204,12 @@ def simulate_retail_demand_series(
     rng = np.random.RandomState(seed)
     records = []
 
-    # Pre-generate global weather sequence across all days
+    # Calendar covariates vary across generated episodes. Weather affects demand
+    # generation but is not exposed to the forecaster as an exact future value.
     day_indices = np.arange(total_days)
+    calendar_days = calendar_start_day + day_indices
     # Seasonal temperature: mean 18C, amplitude 9C, annual cycle 365 days
-    temp_seasonal = 18.0 + 9.0 * np.sin(2 * np.pi * day_indices / 365.0)
+    temp_seasonal = 18.0 + 9.0 * np.sin(2 * np.pi * calendar_days / 365.0)
     temp_noise = rng.normal(loc=0.0, scale=2.5, size=total_days)
     daily_temperatures = np.round(temp_seasonal + temp_noise, 2)
     # Daily precipitation probability
@@ -227,7 +228,7 @@ def simulate_retail_demand_series(
             ar_error[d] = phi * ar_error[d - 1] + white_noise[d]
 
         # Promotional schedule: 18% base probability, higher on Fridays/Saturdays
-        dow_array = day_indices % 7
+        dow_array = calendar_days % 7
         weekend_boost = np.where((dow_array == 4) | (dow_array == 5), 0.12, 0.0)
         promo_probs = 0.15 + weekend_boost
         promo_flags = (rng.uniform(size=total_days) < promo_probs).astype(int)
@@ -261,46 +262,44 @@ def simulate_retail_demand_series(
             promo_mult = price_uplift[d]
             weather_mult = temp_effect[d] * rain_shock[d]
             # Long-term slight organic volume growth (1.5% per year)
-            growth_trend = 1.0 + 0.015 * (d / 365.0)
+            growth_trend = 1.0 + 0.015 * (calendar_days[d] / 365.0)
 
             expected_demand = base_mean * dow_mult * promo_mult * weather_mult * growth_trend
             realized = expected_demand + ar_error[d]
             # Truncate strictly at minimum 1.0 unit (non-negative, strictly positive demand)
             daily_demands[d] = max(1.0, round(float(realized), 2))
 
-        # Compute features strictly using historical observations (no lookahead)
-        # For day d, lag_1 = demand[d-1], lag_2 = demand[d-2], lag_7 = demand[d-7]
-        # rolling_mean_7 = mean(demand[d-7:d]), rolling_std_7 = std(demand[d-7:d])
+        # Features for a five-day plan are defined at episode start. Calendar and
+        # announced promotion/price fields are known over the planning horizon;
+        # demand history is a frozen pre-episode summary. Realized weather and
+        # within-horizon demand lags are deliberately omitted from model inputs.
+        history = daily_demands[max(0, warmup_days - 7) : warmup_days]
+        history_last = float(daily_demands[warmup_days - 1])
+        history_mean = float(np.mean(history))
+        history_std = float(np.std(history, ddof=1)) if len(history) > 1 else 0.0
         for d in range(warmup_days, total_days):
             dow = int(dow_array[d])
             dow_sin = round(math.sin(2 * math.pi * dow / 7.0), 4)
             dow_cos = round(math.cos(2 * math.pi * dow / 7.0), 4)
-
-            lag_1 = float(daily_demands[d - 1])
-            lag_2 = float(daily_demands[d - 2])
-            lag_7 = float(daily_demands[d - 7])
-
-            window_7 = daily_demands[d - 7 : d]
-            roll_mean_7 = round(float(np.mean(window_7)), 3)
-            roll_std_7 = round(float(np.std(window_7, ddof=1)), 3)
+            annual_angle = 2.0 * math.pi * (calendar_days[d] % 365) / 365.0
 
             records.append({
-                "global_day": d,
+                "global_day": int(calendar_days[d]),
                 "store_id": store_id,
                 "day_of_week": dow,
                 "dow_sin": dow_sin,
                 "dow_cos": dow_cos,
+                "annual_sin": round(math.sin(annual_angle), 4),
+                "annual_cos": round(math.cos(annual_angle), 4),
+                "history_last_demand": history_last,
+                "history_mean_7": round(history_mean, 3),
+                "history_std_7": round(history_std, 3),
                 "temperature": float(daily_temperatures[d]),
                 "rain_prob": float(daily_rain_prob[d]),
                 "promo_flag": int(promo_flags[d]),
                 "discount_pct": float(discounts[d]),
                 "base_price": float(base_price),
                 "net_price": float(net_prices[d]),
-                "lag_1": lag_1,
-                "lag_2": lag_2,
-                "lag_7": lag_7,
-                "rolling_mean_7": roll_mean_7,
-                "rolling_std_7": roll_std_7,
                 "demand": float(daily_demands[d]),
             })
 
@@ -308,6 +307,51 @@ def simulate_retail_demand_series(
     # Sort strictly by global_day then store_id
     df = df.sort_values(by=["global_day", "store_id"]).reset_index(drop=True)
     return df
+
+
+def generate_independent_episodes(
+    num_instances: int = 200,
+    num_stores: int = 10,
+    horizon: int = 5,
+    warmup_days: int = 28,
+    seed: int = 42,
+) -> tuple[pd.DataFrame, list[dict[str, int]]]:
+    """Generate independent demand paths with a private historical warmup per episode.
+
+    Each five-day decision episode has its own RNG stream. The warmup is used only
+    to construct the episode-start history features and is never included as an
+    outcome row. This makes episode-level bootstrap inference defensible and keeps
+    future realized demand out of all predictor inputs.
+    """
+    seed_rng = np.random.default_rng(seed)
+    episode_seeds = seed_rng.integers(0, 2**32 - 1, size=num_instances, dtype=np.uint32)
+    calendar_starts = seed_rng.integers(0, 365, size=num_instances)
+    episodes: list[pd.DataFrame] = []
+    episode_manifest: list[dict[str, int]] = []
+
+    for instance_id, (episode_seed, calendar_start) in enumerate(zip(episode_seeds, calendar_starts, strict=True)):
+        raw = simulate_retail_demand_series(
+            num_stores=num_stores,
+            total_days=warmup_days + horizon,
+            warmup_days=warmup_days,
+            seed=int(episode_seed),
+            calendar_start_day=int(calendar_start),
+        )
+        raw = raw.copy()
+        raw["instance_id"] = instance_id
+        raw["t"] = np.repeat(np.arange(1, horizon + 1, dtype=np.int64), num_stores)
+        raw["episode_seed"] = int(episode_seed)
+        raw["episode_calendar_start"] = int(calendar_start)
+        episodes.append(raw)
+        episode_manifest.append({
+            "instance_id": instance_id,
+            "episode_seed": int(episode_seed),
+            "calendar_start_day": int(calendar_start),
+        })
+
+    panel = pd.concat(episodes, ignore_index=True)
+    panel = panel.sort_values(["instance_id", "t", "store_id"]).reset_index(drop=True)
+    return panel, episode_manifest
 
 
 def organize_into_instances(
@@ -339,19 +383,20 @@ def organize_into_instances(
         "day_of_week",
         "dow_sin",
         "dow_cos",
+        "annual_sin",
+        "annual_cos",
+        "history_last_demand",
+        "history_mean_7",
+        "history_std_7",
         "temperature",
         "rain_prob",
         "promo_flag",
         "discount_pct",
         "base_price",
         "net_price",
-        "lag_1",
-        "lag_2",
-        "lag_7",
-        "rolling_mean_7",
-        "rolling_std_7",
         "demand",
     ]
+    ordered_cols = [col for col in ordered_cols if col in df_active.columns]
     df_active = df_active[ordered_cols].sort_values(by=["instance_id", "t", "store_id"]).reset_index(drop=True)
     return df_active
 
@@ -368,8 +413,8 @@ def split_and_save_datasets(
     test_ratio: float = 0.15,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
-    Splits instances sequentially into train, validation, and test datasets.
-    Preserves temporal ordering to prevent lookahead data leakage.
+    Splits independently generated episodes in deterministic ID order into
+    train, validation, and test datasets. Episode IDs are not time blocks.
     """
     instances = sorted(df_instances["instance_id"].unique())
     num_instances = len(instances)
@@ -427,6 +472,9 @@ def save_parameters_configuration(
     """
     config = {
         "description": "Perishable Inventory-Routing System and Operational Parameters",
+        "demand_source": "Synthetic demand generated by data/generate_dataset.py; no M5 observations or M5 calibration are used.",
+        "episode_design": "Independent five-day demand trajectories with a private 28-day historical warmup; the warmup is used only for fixed episode-start context features.",
+        "information_timing": "Calendar and announced promotion/price inputs are known at episode start. Realized weather and within-horizon realized demand are excluded from predictor features.",
         "num_stores": num_stores,
         "horizon_T": horizon,
         "num_instances": num_instances,
@@ -452,20 +500,19 @@ def save_parameters_configuration(
         "topologies": ["C1", "R1", "RC1"],
         "random_seed": seed,
         "feature_names": [
+            "store_id",
             "day_of_week",
             "dow_sin",
             "dow_cos",
-            "temperature",
-            "rain_prob",
+            "annual_sin",
+            "annual_cos",
+            "history_last_demand",
+            "history_mean_7",
+            "history_std_7",
             "promo_flag",
             "discount_pct",
             "base_price",
             "net_price",
-            "lag_1",
-            "lag_2",
-            "lag_7",
-            "rolling_mean_7",
-            "rolling_std_7",
         ],
         "target_name": "demand",
         "index_cols": ["instance_id", "t", "store_id"],
@@ -496,24 +543,15 @@ def run_pipeline(
     print(f"Stores (N): {num_stores} | Horizon (T): {horizon} | Instances: {num_instances} | Seed: {seed}")
     print("=" * 70)
 
-    # 1. Simulate demand series with warm-up
+    # 1. Generate independent demand episodes with a private historical warmup.
     warmup_days = 28
-    total_days = warmup_days + (num_instances * horizon)
-    print(f"[Step 1] Simulating {total_days} total days ({warmup_days} warm-up + {num_instances * horizon} operational)...")
-    df_raw = simulate_retail_demand_series(
+    print(f"[Step 1] Generating {num_instances} independent episodes; each has {warmup_days} warm-up days + {horizon} operational days...")
+    df_instances, episode_manifest = generate_independent_episodes(
+        num_instances=num_instances,
         num_stores=num_stores,
-        total_days=total_days,
+        horizon=horizon,
         warmup_days=warmup_days,
         seed=seed,
-    )
-    print(f"[Step 1] Generated raw daily records: {len(df_raw)} rows across {num_stores} stores.")
-
-    # 2. Group into multi-period instances
-    print(f"[Step 2] Structuring records into {num_instances} instances of T={horizon} horizons...")
-    df_instances = organize_into_instances(
-        df=df_raw,
-        horizon=horizon,
-        num_instances=num_instances,
     )
     print(f"[Step 2] Structured instances shape: {df_instances.shape}")
 
@@ -534,7 +572,7 @@ def run_pipeline(
     print(f"Test demand:  mean={df_test['demand'].mean():.2f}, std={df_test['demand'].std():.2f}, min={df_test['demand'].min():.2f}, max={df_test['demand'].max():.2f}")
 
     # 4. Generate Solomon Network Topologies
-    print("\n[Step 4] Generating and verifying Solomon VRPTW Network Topologies (C1, R1, RC1)...")
+    print("\n[Step 4] Generating and verifying Solomon-derived spatial topologies (C1, R1, RC1)...")
     save_network_topologies(output_dir)
 
     # 5. Save System Parameters Configuration
@@ -546,6 +584,22 @@ def run_pipeline(
         num_stores=num_stores,
         seed=seed,
     )
+
+    manifest_path = os.path.join(output_dir, "episode_manifest.json")
+    with open(manifest_path, "w", encoding="utf-8") as f:
+        json.dump({
+            "master_seed": seed,
+            "num_instances": num_instances,
+            "horizon_days": horizon,
+            "warmup_days": warmup_days,
+            "independent_episode_rng": True,
+            "m5_data_used": False,
+            "episodes": episode_manifest,
+            "train_instance_ids": sorted(df_train["instance_id"].unique().astype(int).tolist()),
+            "validation_instance_ids": sorted(df_val["instance_id"].unique().astype(int).tolist()),
+            "test_instance_ids": sorted(df_test["instance_id"].unique().astype(int).tolist()),
+        }, f, indent=2)
+    print(f"[Manifest] Independent episode seeds and split IDs -> {manifest_path}")
 
     print("\n" + "=" * 70)
     print("DATA PIPELINE GENERATION COMPLETED SUCCESSFULLY!")

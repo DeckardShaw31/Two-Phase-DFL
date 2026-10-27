@@ -1,3 +1,4 @@
+# HISTORICAL: superseded legacy experiment script. Do not use its outputs as evidence for the revised manuscript; see src/experiments/LEGACY_README.md and use run_revision_benchmark.py.
 """
 Empirical Profiling of Two-Phase LP Warmup Acceleration vs Direct MILP.
 
@@ -86,7 +87,7 @@ def run_lp_warmup_experiment(
             "Method": "TwoPhase_LP_Warmup",
             "Phase": row["phase"],
             "Loss": row["loss"],
-            "ValRegret_pct": row["val_regret_pct"],
+            "ValTotalCost": row["val_total_cost"],
             "EpochTime_sec": row["epoch_time_sec"],
             "CumulativeTime_sec": row["cumulative_time_sec"],
         })
@@ -122,7 +123,7 @@ def run_lp_warmup_experiment(
             "Method": "Direct_MILP",
             "Phase": "Direct_MILP",
             "Loss": row["loss"],
-            "ValRegret_pct": row["val_regret_pct"],
+            "ValTotalCost": row["val_total_cost"],
             "EpochTime_sec": row["epoch_time_sec"],
             "CumulativeTime_sec": row["cumulative_time_sec"],
         })

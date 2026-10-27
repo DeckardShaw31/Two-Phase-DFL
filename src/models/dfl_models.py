@@ -2,10 +2,10 @@
 End-to-End Decision-Focused Learning (DFL) Models and Two-Phase Training Schedule.
 
 Implements:
-  1. Bilevel Recourse SPO+ in demand space
+  1. SPO+-inspired learning in demand space using the configured PIRP oracle
   2. IntOpt (Interior Point Differentiation with RHS sensitivity)
   3. DPO (Differentiable Perturbed Optimizer with Stein's Lemma smoothing)
-  4. Algorithm 1: Two-Phase Training Schedule (Continuous LP Warmup -> Discrete MILP Fine-Tuning)
+  4. Algorithm 1: Two-Phase Training Schedule (Continuous LP Warmup -> Integer Decision-Oracle Fine-Tuning)
      with Proximal Trust-Region Regularization and Critical-Fractile Pinball Anchoring.
 """
 
@@ -23,10 +23,7 @@ from torch import nn
 
 from src.optimization.pirp_model import solve_pirp
 from src.optimization.pyepo_interface import DPOLoss, IntOptLoss, PIRPOptModel, SpopLoss
-from src.utils.metrics import (
-    compute_decision_regret,
-    evaluate_decisions_under_true_demand,
-)
+from src.utils.metrics import evaluate_decisions_under_true_demand
 
 
 def asymmetric_pinball_loss(d_hat: torch.Tensor, d_true: torch.Tensor, alpha: float) -> torch.Tensor:
@@ -77,7 +74,7 @@ class DFLNeuralNetwork(nn.Module):
 class DFLPipeline:
     """
     End-to-End Decision-Focused Learning pipeline supporting SPO+, IntOpt, and DPO
-    with Two-Phase Training Schedule (Algorithm 1) and Capacity-Aware Horizon Projection.
+    with a two-phase LP-warmup/constructive-integer-oracle schedule.
     """
 
     def __init__(
@@ -98,6 +95,9 @@ class DFLPipeline:
         distance_matrix: np.ndarray | None = None,
         dpo_samples: int = 3,
         dpo_sigma: float = 2.0,
+        decision_oracle_use_milp: bool = False,
+        solver_time_limit_sec: float = 3.0,
+        mip_rel_gap: float = 0.05,
     ):
         self.loss_type = loss_type.upper()
         self.N = num_stores
@@ -136,8 +136,9 @@ class DFLPipeline:
             stockout_penalty_pu=stockout_penalty_pu,
             distance_matrix=distance_matrix,
             continuous_relaxation=True,
-            time_limit_sec=3.0,
-            mip_rel_gap=0.05,
+            time_limit_sec=solver_time_limit_sec,
+            mip_rel_gap=mip_rel_gap,
+            use_milp=decision_oracle_use_milp,
         )
 
         if self.distance_matrix is None:
@@ -181,7 +182,7 @@ class DFLPipeline:
     ) -> torch.Tensor:
         """
         High-throughput differentiable polyhedral capacity-projected surrogate loss
-        used during large-scale warmup epochs (total_epochs >= 50) between exact HiGHS solver refreshes.
+        used during long runs between decision-oracle refreshes.
         """
         cap_store = min(self.Q, self.Ci)
         cap_fleet = self.K * self.Q
@@ -225,7 +226,7 @@ class DFLPipeline:
         verbose: bool = True,
     ) -> list[dict[str, Any]]:
         """
-        Executes Algorithm 1: Two-Phase Training Schedule (LP Warmup -> MILP Fine-Tuning)
+        Executes the two-phase schedule (LP warmup -> constructive integer-oracle fine-tuning)
         with Asymmetric Pinball (Quantile) Regularization, Conditional Expectation Anchor,
         and Best-Validation Checkpointing.
         """
@@ -274,8 +275,7 @@ class DFLPipeline:
                     loss_pre.backward()
                     mse_opt.step()
 
-        # For large-scale multi-hundred/thousand epoch training (total_epochs >= 50),
-        # pre-cache exact HiGHS LP oracle solutions across all training instances
+        # For longer runs, pre-cache HiGHS LP oracle solutions across training instances.
         fast_large_epoch_mode = total_epochs >= 50
         w_true_lp_tensor: torch.Tensor | None = None
         if fast_large_epoch_mode:
@@ -288,15 +288,17 @@ class DFLPipeline:
 
         transition_epoch = int(total_epochs * transition_ratio)
         if fast_large_epoch_mode and transition_ratio < 1.0:
-            # Keep Phase 1 LP warmup for bulk epochs and dedicate final 10 epochs to exact MILP fine-tuning
+            # Keep the LP warmup for bulk epochs; the final epochs use the
+            # integer decision oracle, which may return a feasible heuristic plan.
             transition_epoch = max(transition_epoch, total_epochs - 10)
 
         optimizer = torch.optim.Adam(self.model.parameters(), lr=lr_phase1)
 
         history = []
         cumulative_time = 0.0
+        current_phase = "Phase1_LP_Warmup"
 
-        best_val_regret = float("inf")
+        best_val_cost = float("inf")
         best_state_dict = copy.deepcopy(self.model.state_dict())
         best_epoch = 0
 
@@ -318,7 +320,7 @@ class DFLPipeline:
                         self.model.load_state_dict(best_state_dict)
                     lp_anchor_model = copy.deepcopy(self.model)
                     lp_anchor_model.eval()
-                current_phase = "Phase2_MILP_FineTune"
+                current_phase = "Phase2_IntegerOracleFineTune"
                 self.optmodel.set_continuous_relaxation(False)
                 current_lr = lr_phase2
                 for param_group in optimizer.param_groups:
@@ -329,8 +331,9 @@ class DFLPipeline:
             epoch_loss = 0.0
             num_batches = int(np.ceil(num_train / batch_size))
 
-            # Determine whether this epoch runs full exact HiGHS solver batches or fast polyhedral LP surrogate
-            use_exact_solver = (
+            # Determine whether this epoch uses the configured PIRP decision oracle
+            # or the fast polyhedral LP surrogate.
+            use_decision_oracle = (
                 (not fast_large_epoch_mode)
                 or (epoch == 1)
                 or (epoch % 200 == 0)
@@ -344,7 +347,7 @@ class DFLPipeline:
 
                 optimizer.zero_grad()
                 d_hat_b = self.model(x_b)
-                if use_exact_solver and (not fast_large_epoch_mode or b < 2):
+                if use_decision_oracle and (not fast_large_epoch_mode or b < 2):
                     dfl_loss = self.criterion(d_hat_b, d_b)
                 elif w_true_lp_tensor is not None:
                     dfl_loss = self._vectorized_polyhedral_loss(d_hat_b, d_b, w_true_lp_tensor[batch_idx])
@@ -354,8 +357,8 @@ class DFLPipeline:
                 pin_loss = asymmetric_pinball_loss(d_hat_b, d_b, alpha=self.alpha)
                 loss = dfl_loss + lambda_pinball * pin_loss
 
-                # Proximal trust-region regularization during Phase 2 to prevent discrete MILP gradient explosion
-                if current_phase == "Phase2_MILP_FineTune" and lp_anchor_model is not None:
+                # Proximal regularization during the integer-oracle phase.
+                if current_phase == "Phase2_IntegerOracleFineTune" and lp_anchor_model is not None:
                     with torch.no_grad():
                         d_anchor = lp_anchor_model(x_b)
                     prox_loss = 0.5 * lambda_prox * torch.mean((d_hat_b - d_anchor) ** 2)
@@ -363,7 +366,7 @@ class DFLPipeline:
 
                 loss.backward()
 
-                if current_phase == "Phase2_MILP_FineTune":
+                if current_phase == "Phase2_IntegerOracleFineTune":
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
 
                 optimizer.step()
@@ -375,7 +378,7 @@ class DFLPipeline:
             cumulative_time += epoch_duration
 
             # Validation evaluation if validation set provided
-            val_regret = best_val_regret if best_val_regret < float("inf") else 0.0
+            val_cost = best_val_cost if best_val_cost < float("inf") else 0.0
             should_eval_val = (
                 X_val is not None
                 and d_val is not None
@@ -389,9 +392,9 @@ class DFLPipeline:
             if should_eval_val and X_val is not None and d_val is not None:
                 val_X = X_val[:val_subset_size] if val_subset_size > 0 else X_val
                 val_d = d_val[:val_subset_size] if val_subset_size > 0 else d_val
-                val_regret = self.evaluate_regret(val_X, val_d)
-                if val_regret < best_val_regret:
-                    best_val_regret = val_regret
+                val_cost = self.evaluate_operational_cost(val_X, val_d)
+                if val_cost < best_val_cost:
+                    best_val_cost = val_cost
                     best_state_dict = copy.deepcopy(self.model.state_dict())
                     best_epoch = epoch
 
@@ -399,7 +402,7 @@ class DFLPipeline:
                 "epoch": epoch,
                 "phase": current_phase,
                 "loss": float(epoch_loss),
-                "val_regret_pct": float(val_regret),
+                "val_total_cost": float(val_cost),
                 "epoch_time_sec": float(epoch_duration),
                 "cumulative_time_sec": float(cumulative_time),
                 "loss_type": self.loss_type,
@@ -409,16 +412,16 @@ class DFLPipeline:
             if verbose and ((not fast_large_epoch_mode) or epoch == 1 or epoch % 100 == 0 or epoch == total_epochs):
                 print(
                     f"[{self.loss_type}] Epoch {epoch}/{total_epochs} ({current_phase}): "
-                    f"Loss={epoch_loss:.2f}, ValRegret={val_regret:.2f}%, Time={epoch_duration:.2f}s"
+                    f"Loss={epoch_loss:.2f}, ValCost={val_cost:.2f}, Time={epoch_duration:.2f}s"
                 )
 
-        # Restore best-validation regret checkpoint if validation was evaluated
+        # Restore best validation operating-cost checkpoint if available.
         if X_val is not None and d_val is not None and best_epoch > 0:
             self.model.load_state_dict(best_state_dict)
             if verbose:
                 print(
                     f"[{self.loss_type}] Restored best validation checkpoint from Epoch {best_epoch} "
-                    f"(Val Regret: {best_val_regret:.2f}%)"
+                    f"(validation cost: {best_val_cost:.2f})"
                 )
 
         return history
@@ -438,10 +441,12 @@ class DFLPipeline:
     ) -> list[dict[str, Any]]:
         """
         Ablation: Trains directly on discrete MILP from Epoch 1 without LP Warmup.
-        Enforces exact branch-and-cut MILP solves (mip_rel_gap = 0.01) to measure full MILP overhead.
+        Requests HiGHS branch-and-cut at 1% MIP gap to measure the MILP-oracle cost.
         """
         prev_gap = self.optmodel.mip_rel_gap
+        prev_use_milp = self.optmodel.use_milp
         self.optmodel.mip_rel_gap = 0.01
+        self.optmodel.use_milp = True
         try:
             return self.fit_two_phase(
                 X_train=X_train,
@@ -459,6 +464,7 @@ class DFLPipeline:
             )
         finally:
             self.optmodel.mip_rel_gap = prev_gap
+            self.optmodel.use_milp = prev_use_milp
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -477,16 +483,11 @@ class DFLPipeline:
 
         return np.maximum(0.0, nn_preds)
 
-    def evaluate_regret(self, X_eval: np.ndarray, d_eval: np.ndarray) -> float:
-        """Computes mean out-of-sample normalized decision regret (%) on evaluation set."""
+    def evaluate_operational_cost(self, X_eval: np.ndarray, d_eval: np.ndarray) -> float:
+        """Computes mean realized operating cost without a heuristic oracle reference."""
         preds = self.predict(X_eval)
-        num_eval = len(preds)
-        regrets = []
-
-        if not hasattr(self, "_oracle_cost_cache"):
-            self._oracle_cost_cache = {}
-
-        for i in range(num_eval):
+        realized_costs: list[float] = []
+        for i in range(len(preds)):
             d_pred = preds[i]
             d_true = d_eval[i]
 
@@ -502,8 +503,12 @@ class DFLPipeline:
                 spoilage_penalty_ps=self.ps,
                 vehicle_capacity_Q=self.Q,
                 store_capacity_Ci=self.Ci,
-                time_limit_sec=2.0,
+                time_limit_sec=self.optmodel.time_limit_sec,
+                mip_rel_gap=self.optmodel.mip_rel_gap,
+                use_milp=self.optmodel.use_milp,
             )
+            if not sol_model.success:
+                raise RuntimeError(f"No feasible validation plan: {sol_model.message}")
             # Evaluate model decision under true realization
             eval_metrics = evaluate_decisions_under_true_demand(
                 q_plan=sol_model.q_total,
@@ -519,31 +524,9 @@ class DFLPipeline:
             )
             model_realized_cost = eval_metrics["total_cost"]
 
-            # Solve oracle under true demand (cached across evaluation calls)
-            d_true_key = np.ascontiguousarray(d_true, dtype=np.float64).tobytes()
-            if d_true_key in self._oracle_cost_cache:
-                oracle_cost = self._oracle_cost_cache[d_true_key]
-            else:
-                sol_oracle = solve_pirp(
-                    demand=d_true,
-                    distance_matrix=self.distance_matrix,
-                    continuous_relaxation=False,
-                    shelf_life_tau=self.tau,
-                    holding_cost_h=self.h,
-                    aging_surcharge_eps=self.aging_surcharge_eps,
-                    stockout_penalty_pu=self.pu,
-                    spoilage_penalty_ps=self.ps,
-                    vehicle_capacity_Q=self.Q,
-                    store_capacity_Ci=self.Ci,
-                    time_limit_sec=2.0,
-                )
-                oracle_cost = sol_oracle.total_cost
-                self._oracle_cost_cache[d_true_key] = oracle_cost
+            realized_costs.append(model_realized_cost)
 
-            _, norm_regret = compute_decision_regret(model_realized_cost, oracle_cost)
-            regrets.append(norm_regret)
-
-        return float(np.mean(regrets)) if len(regrets) > 0 else 0.0
+        return float(np.mean(realized_costs)) if realized_costs else float("inf")
 
 
 # Backward compatibility alias

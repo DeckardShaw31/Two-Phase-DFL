@@ -1,0 +1,3 @@
+outcome,comparison,n_independent_episodes,mean_paired_difference,paired_sd,bootstrap_95ci_low,bootstrap_95ci_high,paired_t_p_raw,holm_adjusted_p,primary_family
+total_cost,Two-Phase_DFL minus LightGBM_PTO,1,286.7746930539156,,286.7746930539156,286.7746930539156,,1.0,two prespecified total-cost comparisons
+total_cost,Two-Phase_DFL minus Crama_UL_lambda_adaptation,1,-158.26651154103365,,-158.26651154103365,-158.26651154103365,,1.0,two prespecified total-cost comparisons

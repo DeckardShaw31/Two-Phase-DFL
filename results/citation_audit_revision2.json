@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "bib_path": "paper\\references.bib",
+  "tex_path": "main.tex",
+  "total_bib_entries": 60,
+  "total_manuscript_citations": 12,
+  "missing_bib_keys": [],
+  "entries_without_doi_or_url": [],
+  "unbalanced_tex_environments": [],
+  "checks": [
+    "Parsed 60 entries in paper\\references.bib.",
+    "All BibTeX entries contain verified DOI or permanent URL.",
+    "All manuscript citations successfully resolve in references.bib.",
+    "All 7 LaTeX environments balanced and closed."
+  ]
+}

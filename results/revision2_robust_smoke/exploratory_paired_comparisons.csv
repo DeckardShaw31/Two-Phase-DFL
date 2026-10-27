@@ -1,0 +1,3 @@
+outcome,comparison,n_paired_test_episodes,mean_paired_difference,bootstrap_95ci_low,bootstrap_95ci_high,status
+total_cost,Empirical robust adaptation minus LightGBM_PTO,2,-234.23362800479083,-333.60980755206765,-134.857448457514,exploratory; comparator added after the revision2 pilot outcomes were inspected
+total_cost,Empirical robust adaptation minus Two-Phase_DFL,2,27.149542896240405,-131.7336340636191,186.0327198560999,exploratory; comparator added after the revision2 pilot outcomes were inspected

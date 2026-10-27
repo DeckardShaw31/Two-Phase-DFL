@@ -219,7 +219,7 @@ def plot_speedup_pareto(
     output_path: str = "results/figures/fig_speedup_pareto.png",
 ):
     """
-    Figure 3: Wall-Clock Convergence Curve comparing Two-Phase LP-Warmup vs Direct MILP.
+    Wall-clock comparison using validation operating cost, not oracle-normalized regret.
     """
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     plt.style.use("seaborn-v0_8-whitegrid" if "seaborn-v0_8-whitegrid" in plt.style.available else "default")
@@ -232,10 +232,10 @@ def plot_speedup_pareto(
         sub = speedup_df[speedup_df["Method"] == m].sort_values("Epoch")
         c = colors.get(m, "#333333")
         label = "Two-Phase Warmup (Proposed)" if "TwoPhase" in m else ("Direct MILP" if "Direct" in m else m)
-        ax1.plot(sub["CumulativeTime_sec"], sub["ValRegret_pct"], marker="o", label=label, color=c, linewidth=2.2, markersize=5)
+        ax1.plot(sub["CumulativeTime_sec"], sub["ValTotalCost"], marker="o", label=label, color=c, linewidth=2.2, markersize=5)
 
     ax1.set_xlabel("Cumulative Wall-Clock Time (seconds)", fontsize=11, fontweight="bold")
-    ax1.set_ylabel("Validation Decision Regret (%)", fontsize=11, fontweight="bold")
+    ax1.set_ylabel("Validation Operating Cost", fontsize=11, fontweight="bold")
     ax1.set_title("(a) Convergence vs. Elapsed Wall-Clock Time", fontsize=12, fontweight="bold")
     ax1.legend(frameon=True, facecolor="white")
     ax1.grid(True, linestyle="--", alpha=0.7)

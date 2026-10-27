@@ -8,7 +8,8 @@ def simulate_perishable_inventory_fifo(
     tau: int = 3,
     initial_inventory: np.ndarray | None = None,
     store_capacity_Ci: float = float("inf"),
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    return_components: bool = False,
+) -> tuple[np.ndarray, ...]:
     """
     Simulates exact FIFO perishable inventory dynamics at retail stores under true demand.
     Enforces store physical storage capacity Ci via oldest-first overflow disposal (Algorithm 1).
@@ -29,7 +30,8 @@ def simulate_perishable_inventory_fifo(
     N, T = true_demand.shape
     I_on_hand = np.zeros((N, T, tau - 1), dtype=np.float64)
     y_pos = np.zeros((N, T), dtype=np.float64)
-    y_neg = np.zeros((N, T), dtype=np.float64)
+    y_expired = np.zeros((N, T), dtype=np.float64)
+    y_capacity_discard = np.zeros((N, T), dtype=np.float64)
     w_consumed = np.zeros((N, T, tau), dtype=np.float64)
 
     # Current inventory at start of period: for ages 1..tau
@@ -37,6 +39,10 @@ def simulate_perishable_inventory_fifo(
     prev_I = np.zeros((N, tau - 1), dtype=np.float64)
     if initial_inventory is not None:
         prev_I = np.array(initial_inventory, dtype=np.float64)
+        if prev_I.shape != (N, tau - 1):
+            raise ValueError(f"initial_inventory must have shape ({N}, {tau - 1})")
+        if np.any(prev_I < 0) or np.any(~np.isfinite(prev_I)):
+            raise ValueError("initial_inventory must contain finite nonnegative quantities")
 
     for t in range(T):
         for i in range(N):
@@ -64,7 +70,7 @@ def simulate_perishable_inventory_fifo(
             y_pos[i, t] = max(0.0, demand_remaining)
 
             # Oldest unconsumed inventory (age tau) expires / spoils
-            y_neg[i, t] = max(0.0, stock_by_age[tau - 1])
+            y_expired[i, t] = max(0.0, stock_by_age[tau - 1])
 
             # Store capacity enforcement (Algorithm 1):
             # If tentative surviving intermediate inventory exceeds store_capacity_Ci,
@@ -78,7 +84,7 @@ def simulate_perishable_inventory_fifo(
                     discard = min(stock_by_age[a], excess)
                     stock_by_age[a] -= discard
                     excess -= discard
-                    y_neg[i, t] += discard
+                    y_capacity_discard[i, t] += discard
 
             # Remaining unconsumed inventory for ages 1..tau-1 carries over
             for a in range(tau - 1):
@@ -86,7 +92,9 @@ def simulate_perishable_inventory_fifo(
 
             prev_I[i, :] = I_on_hand[i, t, :]
 
-    return I_on_hand, y_pos, y_neg, w_consumed
+    if return_components:
+        return I_on_hand, y_pos, y_expired, y_capacity_discard, w_consumed
+    return I_on_hand, y_pos, y_expired + y_capacity_discard, w_consumed
 
 
 def evaluate_decisions_under_true_demand(
@@ -101,6 +109,7 @@ def evaluate_decisions_under_true_demand(
     tau: int = 3,
     initial_inventory: np.ndarray | None = None,
     store_capacity_Ci: float = 70.0,
+    vehicle_capacity_Q: float = 100.0,
 ) -> dict[str, float]:
     """
     Evaluates the exact realized operational costs of planned decisions under true demand.
@@ -139,12 +148,13 @@ def evaluate_decisions_under_true_demand(
     else:
         routing_cost = 0.0
 
-    I_on_hand, y_pos, y_neg, _ = simulate_perishable_inventory_fifo(
+    I_on_hand, y_pos, y_expired, y_capacity_discard, _ = simulate_perishable_inventory_fifo(
         q_delivered=q_delivered,
         true_demand=true_demand,
         tau=tau,
         initial_inventory=initial_inventory,
         store_capacity_Ci=store_capacity_Ci,
+        return_components=True,
     )
 
     # Age-differentiated holding cost: h_a = h + (a - 1) * aging_surcharge_eps
@@ -153,17 +163,64 @@ def evaluate_decisions_under_true_demand(
         dtype=np.float64,
     )
     holding_cost = float(np.sum(I_on_hand * h_weights))
-    spoilage_cost = float(p_s * np.sum(y_neg))
+    expired_units = float(np.sum(y_expired))
+    capacity_discard_units = float(np.sum(y_capacity_discard))
+    spoilage_cost = float(p_s * (expired_units + capacity_discard_units))
     stockout_cost = float(p_u * np.sum(y_pos))
     total_cost = routing_cost + holding_cost + spoilage_cost + stockout_cost
 
-    return {
+    total_demand = float(np.sum(true_demand))
+    unmet_units = float(np.sum(y_pos))
+    delivery_units = float(np.sum(q_delivered))
+    if isinstance(x_plan, np.ndarray) and x_plan.ndim == 4:
+        route_distance = routing_cost
+        routes_used = float(np.sum(x_plan[0, 1:, :, :]))
+    elif isinstance(x_plan, np.ndarray) and x_plan.ndim == 3:
+        route_distance = routing_cost
+        routes_used = float(np.sum(x_plan[0, 1:, :]))
+    else:
+        route_distance = routing_cost
+        routes_used = 0.0
+    fleet_capacity_utilization = delivery_units / (routes_used * vehicle_capacity_Q) if routes_used > 0 else 0.0
+
+    result: dict[str, float] = {
         "routing_cost": routing_cost,
+        "route_distance": route_distance,
+        "routes_used": routes_used,
+        "fleet_capacity_utilization": float(fleet_capacity_utilization),
         "holding_cost": holding_cost,
         "spoilage_cost": spoilage_cost,
+        "expiry_cost": float(p_s * expired_units),
+        "capacity_disposal_cost": float(p_s * capacity_discard_units),
+        "expired_units": expired_units,
+        "capacity_discard_units": capacity_discard_units,
         "stockout_cost": stockout_cost,
         "total_cost": total_cost,
+        "total_demand_units": total_demand,
+        "unmet_demand_units": unmet_units,
+        "fill_rate": 1.0 - unmet_units / total_demand if total_demand > 0 else 1.0,
+        "delivery_units": delivery_units,
+        "on_hand_unit_periods": float(np.sum(I_on_hand)),
+        "average_on_hand_per_store_period": float(np.mean(np.sum(I_on_hand, axis=2))),
+        "ending_inventory_units": float(np.sum(I_on_hand[:, -1, :])),
     }
+    for age_idx in range(tau - 1):
+        result[f"average_on_hand_age_{age_idx + 1}"] = float(np.mean(I_on_hand[:, :, age_idx]))
+    for period_idx in range(true_demand.shape[1]):
+        period_demand = float(np.sum(true_demand[:, period_idx]))
+        result[f"fill_rate_period_{period_idx + 1}"] = (
+            1.0 - float(np.sum(y_pos[:, period_idx])) / period_demand if period_demand > 0 else 1.0
+        )
+        for age_idx in range(tau - 1):
+            result[f"average_on_hand_age_{age_idx + 1}_period_{period_idx + 1}"] = float(
+                np.mean(I_on_hand[:, period_idx, age_idx])
+            )
+    for store_idx in range(true_demand.shape[0]):
+        store_demand = float(np.sum(true_demand[store_idx, :]))
+        result[f"fill_rate_store_{store_idx + 1}"] = (
+            1.0 - float(np.sum(y_pos[store_idx, :])) / store_demand if store_demand > 0 else 1.0
+        )
+    return result
 
 
 # Standard alias matching paper and research documentation terminology

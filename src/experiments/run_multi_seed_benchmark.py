@@ -1,3 +1,4 @@
+# HISTORICAL: superseded legacy experiment script. Do not use its outputs as evidence for the revised manuscript; see src/experiments/LEGACY_README.md and use run_revision_benchmark.py.
 """
 Multi-Seed Benchmark Evaluation Harness (5 Seeds x 1,500 Epochs).
 
@@ -172,6 +173,7 @@ def run_multi_seed_benchmark(
     total_epochs: int = 1500,
     topology: str = "C1",
     output_dir: str = "results",
+    data_dir: str = "data/processed",
     save_results: bool = True,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
@@ -195,8 +197,11 @@ def run_multi_seed_benchmark(
     print(f"Topology: {topology}, DFL Total Epochs: {total_epochs}")
     print("=" * 80)
 
-    network_file = f"data/processed/network_solomon_{topology.lower()}.json"
-    df_train, df_val, df_test, config, dist_matrix, feat_cols = load_dataset(network_path=network_file)
+    network_file = os.path.join(data_dir, f"network_solomon_{topology.lower()}.json")
+    df_train, df_val, df_test, config, dist_matrix, feat_cols = load_dataset(
+        network_path=network_file,
+        data_dir=data_dir,
+    )
 
     N = config["num_stores"]
     T = config["horizon_T"]
@@ -370,8 +375,8 @@ def run_multi_seed_benchmark(
                 train_time = time.perf_counter() - t0
                 preds = dfl_direct.predict(X_test_3d)
                 # Find best checkpoint epoch
-                val_regrets = [h["val_regret_pct"] for h in history if h.get("val_regret_pct", 0) > 0]
-                best_epoch = int(np.argmin(val_regrets)) + 1 if val_regrets else total_epochs
+                val_costs = [h["val_total_cost"] for h in history if h.get("val_total_cost", 0) > 0]
+                best_epoch = int(np.argmin(val_costs)) + 1 if val_costs else total_epochs
 
                 for h in history:
                     convergence_history_records.append({
@@ -380,7 +385,7 @@ def run_multi_seed_benchmark(
                         "Epoch": h["epoch"],
                         "Phase": h["phase"],
                         "TrainLoss": h["loss"],
-                        "ValRegret_pct": h["val_regret_pct"],
+                        "ValTotalCost": h["val_total_cost"],
                         "EpochTime_sec": h["epoch_time_sec"],
                         "CumulativeTime_sec": h["cumulative_time_sec"],
                     })
@@ -412,8 +417,8 @@ def run_multi_seed_benchmark(
                 )
                 train_time = time.perf_counter() - t0
                 preds = dfl_ours.predict(X_test_3d)
-                val_regrets = [h["val_regret_pct"] for h in history if h.get("val_regret_pct", 0) > 0]
-                best_epoch = int(np.argmin(val_regrets)) + 1 if val_regrets else 1150
+                val_costs = [h["val_total_cost"] for h in history if h.get("val_total_cost", 0) > 0]
+                best_epoch = int(np.argmin(val_costs)) + 1 if val_costs else total_epochs
 
                 for h in history:
                     convergence_history_records.append({
@@ -422,7 +427,7 @@ def run_multi_seed_benchmark(
                         "Epoch": h["epoch"],
                         "Phase": h["phase"],
                         "TrainLoss": h["loss"],
-                        "ValRegret_pct": h["val_regret_pct"],
+                        "ValTotalCost": h["val_total_cost"],
                         "EpochTime_sec": h["epoch_time_sec"],
                         "CumulativeTime_sec": h["cumulative_time_sec"],
                     })
@@ -667,6 +672,7 @@ if __name__ == "__main__":
     parser.add_argument("--epochs", type=int, default=1500, help="Total DFL training epochs")
     parser.add_argument("--topology", type=str, default="C1", help="Network topology")
     parser.add_argument("--output_dir", type=str, default="results", help="Output directory")
+    parser.add_argument("--data_dir", type=str, default="data/processed", help="Generated dataset directory")
     parser.add_argument("--seeds", type=str, default="all", help="Comma-separated seed list or 'all'")
     parser.add_argument("--models", type=str, default="all", help="Comma-separated model names or 'all'")
     args = parser.parse_args()
@@ -679,4 +685,5 @@ if __name__ == "__main__":
         total_epochs=args.epochs,
         topology=args.topology,
         output_dir=args.output_dir,
+        data_dir=args.data_dir,
     )

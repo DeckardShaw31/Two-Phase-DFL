@@ -1,3 +1,5 @@
+> Historical draft retained for provenance. Superseded by `revision_1/revision_plan.md` and the revised evidence package. Earlier M5-calibration, solver-optimality, comparator, or result claims in this file are not current evidence.
+
 # Technical Specification and Execution Plan: End-to-End Decision-Focused Learning for Perishable Inventory-Routing under Asymmetric Spoilage and Stockout Costs
 
 **Target Outlets**: *European Journal of Operational Research* (EJOR), *International Journal of Production Economics* (IJPE), *Transportation Research Part E: Logistics and Transportation Review* (TRE).  
@@ -810,3 +812,4 @@ To ensure flawless, modular execution across the research team, this specificati
 | $w^*(\hat{c})$ | $\arg\min_{w \in \mathcal{W}} \hat{c}^T w$ | Optimal operational decision under predicted costs |
 | $\ell_{\text{SPO}+}$ | Convex functional | Smart Predict-then-Optimize surrogate loss |
 | $\mathcal{R}(\hat{c}, c)$ | $\mathbb{R}_+$ | Out-of-sample Decision Regret |
+

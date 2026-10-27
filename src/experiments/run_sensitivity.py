@@ -1,3 +1,4 @@
+# HISTORICAL: superseded legacy experiment script. Do not use its outputs as evidence for the revised manuscript; see src/experiments/LEGACY_README.md and use run_revision_benchmark.py.
 """
 Sensitivity Analysis across Asymmetric Penalties, Shelf Lives, Solomon Topologies,
 and Vehicle Capacity Tightness (Full 81-Configuration Factorial Grid).
@@ -116,6 +117,8 @@ def run_sensitivity_experiments(
     num_eval_instances: int = 10,
     save_results: bool = True,
     seed: int = 42,
+    data_dir: str = "data/processed",
+    output_dir: str = "results",
 ) -> pd.DataFrame:
     """
     Executes complete 81-configuration factorial grid sensitivity experiments.
@@ -145,8 +148,11 @@ def run_sensitivity_experiments(
     config_counter = 0
 
     for topo in topologies:
-        net_file = f"data/processed/network_solomon_{topo.lower()}.json"
-        df_train, df_val, df_test, config, dist_matrix, feat_cols = load_dataset(network_path=net_file)
+        net_file = os.path.join(data_dir, f"network_solomon_{topo.lower()}.json")
+        df_train, df_val, df_test, config, dist_matrix, feat_cols = load_dataset(
+            network_path=net_file,
+            data_dir=data_dir,
+        )
 
         N = config["num_stores"]
         T = config["horizon_T"]
@@ -275,13 +281,14 @@ def run_sensitivity_experiments(
     assert len(param_tuples) == 81, f"Expected 81 unique configurations, got {len(param_tuples)}"
 
     if save_results:
-        os.makedirs("results/figures", exist_ok=True)
-        csv_path = "results/sensitivity_analysis.csv"
+        figures_dir = os.path.join(output_dir, "figures")
+        os.makedirs(figures_dir, exist_ok=True)
+        csv_path = os.path.join(output_dir, "sensitivity_analysis.csv")
         df_sens.to_csv(csv_path, index=False)
         print(f"Saved full 81-configuration sensitivity analysis to: {csv_path}")
 
         # Regenerate sensitivity heatmap
-        plot_sensitivity_heatmap(df_sens, "results/figures/fig_sensitivity_heatmap.png")
+        plot_sensitivity_heatmap(df_sens, os.path.join(figures_dir, "fig_sensitivity_heatmap.png"))
 
     return df_sens
 

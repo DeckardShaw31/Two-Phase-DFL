@@ -39,6 +39,7 @@ class PIRPOptModel:
         continuous_relaxation: bool = False,
         time_limit_sec: float | None = None,
         mip_rel_gap: float = 0.05,
+        use_milp: bool = False,
     ):
         self.N = num_stores
         self.T = horizon_T
@@ -54,6 +55,7 @@ class PIRPOptModel:
         self.continuous_relaxation = continuous_relaxation
         self.time_limit_sec = time_limit_sec
         self.mip_rel_gap = mip_rel_gap
+        self.use_milp = use_milp
 
         self.model = PIRPModel(
             num_stores=num_stores,
@@ -99,6 +101,7 @@ class PIRPOptModel:
                 demand=demand,
                 time_limit_sec=self.time_limit_sec,
                 mip_rel_gap=self.mip_rel_gap,
+                use_milp=self.use_milp,
             )
             self._cache[key] = sol
             return sol
@@ -107,6 +110,7 @@ class PIRPOptModel:
             demand=demand,
             time_limit_sec=self.time_limit_sec,
             mip_rel_gap=self.mip_rel_gap,
+            use_milp=self.use_milp,
         )
 
     def solve_true(self, demand: np.ndarray) -> PIRPSolution:

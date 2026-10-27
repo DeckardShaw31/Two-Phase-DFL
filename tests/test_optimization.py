@@ -48,13 +48,56 @@ def test_lp_relaxation_feasibility_and_speed(dummy_instance):
 
 def test_milp_integrality_and_bounds(dummy_instance):
     _N, _T, dist, demand = dummy_instance
-    sol_milp = solve_pirp(demand=demand, distance_matrix=dist, continuous_relaxation=False, time_limit_sec=3.0, mip_rel_gap=0.05)
+    sol_milp = solve_pirp(
+        demand=demand,
+        distance_matrix=dist,
+        continuous_relaxation=False,
+        time_limit_sec=3.0,
+        mip_rel_gap=0.05,
+        use_milp=True,
+    )
     assert sol_milp.success is True
     assert sol_milp.objective_val > 0.0
+    assert sol_milp.solver_name.startswith("HiGHS MILP") or sol_milp.solver_name.startswith("HiGHS MILP attempt")
     # Check bounds
     assert np.all(sol_milp.x_routes >= -1e-6)
     assert np.all(sol_milp.x_routes <= 1.0 + 1e-6)
     assert np.all(sol_milp.q_total >= -1e-6)
+
+
+def test_default_integer_solve_is_labeled_as_heuristic(dummy_instance):
+    _N, _T, dist, demand = dummy_instance
+    solution = solve_pirp(demand=demand, distance_matrix=dist)
+    assert solution.success
+    assert not solution.is_optimal
+    assert solution.solver_name == "LP-guided constructive heuristic"
+
+
+def test_initial_inventory_model_matches_fifo_simulator():
+    demand = np.array([[3.0, 4.0, 2.0], [2.0, 1.0, 4.0]])
+    distance = np.array([[0.0, 1.0, 2.0], [1.0, 0.0, 1.0], [2.0, 1.0, 0.0]])
+    initial_inventory = np.array([[2.0, 1.0], [1.0, 0.0]])
+    solution = solve_pirp(
+        demand,
+        distance_matrix=distance,
+        shelf_life_tau=3,
+        initial_inventory=initial_inventory,
+        time_limit_sec=3.0,
+        mip_rel_gap=0.05,
+        use_milp=True,
+    )
+    assert solution.success
+    I, y_pos, y_neg, w = simulate_perishable_inventory_fifo(
+        solution.q_total,
+        demand,
+        tau=3,
+        initial_inventory=initial_inventory,
+        store_capacity_Ci=70,
+    )
+    assert np.allclose(I, solution.I_inventory, atol=1e-5)
+    assert np.allclose(y_pos, solution.y_pos, atol=1e-5)
+    assert np.allclose(y_neg, solution.y_neg, atol=1e-5)
+    assert np.allclose(w, solution.w_consumed, atol=1e-5)
 
 
 def test_complete_recourse_non_emptiness(dummy_instance):
@@ -226,6 +269,6 @@ def test_dfl_pipeline_best_validation_checkpointing():
         verbose=False,
     )
     assert len(history) == 2
-    assert "val_regret_pct" in history[0]
-    assert history[0]["val_regret_pct"] >= 0.0
+    assert "val_total_cost" in history[0]
+    assert history[0]["val_total_cost"] >= 0.0
 

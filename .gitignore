@@ -26,6 +26,8 @@ plan_brainstorm.md
 
 # Manuscript and LaTeX directory
 paper/
+supplementary_material/
+*.zip
 
 # OS-generated files
 .DS_Store

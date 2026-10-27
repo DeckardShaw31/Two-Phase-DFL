@@ -284,7 +284,7 @@ def test_dfl_pipeline_two_phase_warmup():
     )
     assert len(history) == 2
     assert history[0]["phase"] == "Phase1_LP_Warmup"
-    assert history[1]["phase"] == "Phase2_MILP_FineTune"
+    assert history[1]["phase"] == "Phase2_IntegerOracleFineTune"
 
 
 def test_dry_run_benchmark_integration(tmp_path):
