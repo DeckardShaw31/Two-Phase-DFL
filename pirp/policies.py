@@ -144,10 +144,16 @@ class BaseStockPolicy:
 
 class ULPolicy:
     """Crama et al. (2018) UL_lambda: visit a store when its stock does not cover today's demand
-    at service level beta; then deliver up to the alpha-quantile of lambda days of demand."""
+    at service level beta; then deliver up to the alpha-quantile of lambda days of demand.
 
-    def __init__(self, inst: Instance, router: SubsetRouting, lam: int = 2, alpha: float = 0.9, beta: float = 0.7):
+    By default the order-up-to level is reached net of the stock projected to expire within the
+    lambda days (as in BSP-EW). net_waste=False with beta = alpha is the rule as published, which
+    uses one target service level and counts the total stock."""
+
+    def __init__(self, inst: Instance, router: SubsetRouting, lam: int = 2, alpha: float = 0.9, beta: float = 0.7,
+                 net_waste: bool = True):
         self.inst, self.router, self.lam, self.alpha, self.beta = inst, router, lam, alpha, beta
+        self.net_waste = net_waste
         self.name = f"UL(lam={lam},a={alpha},b={beta})"
 
     def decide(self, ctx: Context) -> tuple[np.ndarray, dict]:
@@ -156,7 +162,7 @@ class ULPolicy:
         trigger = stock < quantile_at(ctx.qs[:, 0], self.beta)
         lam = min(self.lam, ctx.mu.shape[1])
         S = cumulative_quantile(ctx.mu, sig, ctx.qs, lam, self.alpha)
-        usable = stock - projected_waste(ctx.B, ctx.mu, lam)
+        usable = stock - projected_waste(ctx.B, ctx.mu, lam) if self.net_waste else stock
         q = np.where(trigger, np.maximum(S - usable, 0.0), 0.0)
         urgent = np.where(trigger, np.maximum(quantile_at(ctx.qs[:, 0], self.beta) - stock, 0.0), 0.0)
         return repair(q, urgent, self.router, self.inst, ctx.B), {}

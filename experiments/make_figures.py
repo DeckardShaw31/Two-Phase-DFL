@@ -22,7 +22,7 @@ LABEL = {"BSP": "BSP", "BSP-EW": "BSP-EW", "UL": r"UL$_\lambda$", "UL-DFL": "UL-
          "PTO-Mean": "LA-Mean",
          "PTO-Q": "LA-Quantile", "PTO-Q2": "LA-Quantile2", "Robust": "LA-Robust", "ScenPO-SS": "ScenPO-SS",
          "DFL": "LA-DFL", "PI": "PI (reference)"}
-TEX = {"BSP": "BSP", "BSP-EW": "BSP-EW", "UL": r"UL$_\lambda$", "UL-DFL": "UL-DFL", "NN-DFL": "NN-DFL",
+TEX = {"BSP": "BSP", "BSP-EW": "BSP-EW", "UL": r"UL$_\lambda$", "UL-DFL": "UL-DFL", "NN-DFL": "NN-DFL", "NB-DFL": "NB-DFL",
        "PTO-Mean": "LA-Mean",
        "PTO-Q": "LA-Quantile", "PTO-Q2": "LA-Quantile2", "Robust": "LA-Robust", "ScenPO-SS": "ScenPO-SS",
        "DFL": "LA-DFL", "PI": "PI"}
@@ -129,7 +129,7 @@ def table_sensitivity(results: str, out: str, configs: list[str]) -> pd.DataFram
                 recs.append({"config": c, "policy": k, "cost": s.loc[k, "cost"], "rel_to_q": s.loc[k, "cost"] / ref - 1,
                              "fill": s.loc[k, "fill"], "waste_rate": s.loc[k, "waste_rate"], "best": k == best_nonpi})
         for prop, comp in [("DFL", x) for x in ("PTO-Q", "PTO-Q2", "ScenPO-SS", "BSP-EW", "UL", "Robust")] + \
-                [("UL-DFL", x) for x in ("UL", "BSP-EW", "ScenPO-SS", "DFL", "PTO-Q2", "NN-DFL")]:
+                [("UL-DFL", x) for x in ("UL", "BSP-EW", "ScenPO-SS", "DFL", "PTO-Q2", "NN-DFL", "NB-DFL")]:
             key = f"{prop} - {comp}"
             if key in t.index:
                 recs.append({"config": c, "policy": f"diff:{key}", "cost": t.loc[key, "mean_diff"],
@@ -172,7 +172,8 @@ def table_sensitivity(results: str, out: str, configs: list[str]) -> pd.DataFram
     open(os.path.join(out, "tab_sensitivity.tex"), "w").write(tex)
     # paired differences of the two decision-focused policies across configurations
     for prop, comps, fname in (("DFL", ("PTO-Q", "PTO-Q2", "ScenPO-SS", "Robust", "BSP-EW", "UL"), "tab_dfl_diffs.tex"),
-                               ("UL-DFL", ("UL", "BSP-EW", "ScenPO-SS", "DFL", "PTO-Q2", "NN-DFL"), "tab_uldfl_diffs.tex")):
+                               ("UL-DFL", ("UL", "BSP-EW", "ScenPO-SS", "DFL", "PTO-Q2", "NN-DFL", "NB-DFL"),
+                                "tab_uldfl_diffs.tex")):
         dl = []
         for comp in comps:
             cells = []
@@ -284,7 +285,7 @@ def table_seeds(results: str, out: str, configs: list[str]) -> None:
         if R is None:
             continue
         piv = R["ep"].pivot(index="episode", columns="policy", values="cost_total")
-        for prop, ref in (("UL-DFL", "UL"), ("NN-DFL", "UL"), ("DFL", "PTO-Q")):
+        for prop, ref in (("UL-DFL", "UL"), ("NN-DFL", "UL"), ("NB-DFL", "UL"), ("DFL", "PTO-Q")):
             seeds = sorted(k for k in piv.columns if k.startswith(prop + "@s"))
             if not seeds or prop not in piv:
                 continue
@@ -299,9 +300,10 @@ def table_seeds(results: str, out: str, configs: list[str]) -> None:
         open(os.path.join(out, "tab_seeds.tex"), "w").write(tex)
 
 
-MACRO = {"BSP": "BSP", "BSP-EW": "BSPEW", "UL": "UL", "UL-DFL": "ULDFL", "NN-DFL": "NNDFL", "PTO-Mean": "LAMean", "PTO-Q": "LAQ",
+MACRO = {"BSP": "BSP", "BSP-EW": "BSPEW", "UL": "UL", "UL-DFL": "ULDFL", "NN-DFL": "NNDFL", "NB-DFL": "NBDFL",
+         "PTO-Mean": "LAMean", "PTO-Q": "LAQ",
          "PTO-Q2": "LAQTwo", "Robust": "LARob", "ScenPO-SS": "ScenPO", "DFL": "DFL", "PI": "PI",
-         "UL-coarse": "ULcoarse", "UL-DFL-coarse": "ULDFLcoarse", "ScenPO-SS-bands": "ScenPObands"}
+         "UL-coarse": "ULcoarse", "UL-DFL-coarse": "ULDFLcoarse", "ScenPO-SS-bands": "ScenPObands", "UL-orig": "ULorig"}
 CFG_MACRO = {"base": "Base", "net_c1": "NetCOne", "net_rc1": "NetRCOne", "fresh": "Fresh", "m2": "MTwo", "m4": "MFour", "pu10": "PuTen", "pu40": "PuForty",
              "fleet_tight": "FleetTight", "fleet_loose": "FleetLoose", "highvar": "HighVar", "route3": "RouteThree",
              "lifo": "Lifo", "base_fresh": "BaseFresh"}
@@ -317,7 +319,9 @@ def table_variants(results: str, out: str, configs: list[str]) -> None:
              ("UL-DFL-coarse", "UL-coarse", r"UL-DFL vs.\ UL$_\lambda$, both coarse (first version)"),
              ("UL-DFL-coarse", "UL", r"UL-DFL from coarse rule vs.\ UL$_\lambda$ fine"),
              ("UL-DFL", "UL", r"UL-DFL vs.\ UL$_\lambda$, both fine (reported)"),
-             ("ScenPO-SS", "ScenPO-SS-bands", r"ScenPO-SS, Jia et al.\ vs.\ band sampling")]
+             ("ScenPO-SS", "ScenPO-SS-bands", r"ScenPO-SS, Jia et al.\ vs.\ band sampling"),
+             ("UL-orig", "UL", r"UL$_\lambda$ as published vs.\ UL$_\lambda$ (reported)"),
+             ("UL-DFL", "UL-orig", r"UL-DFL vs.\ UL$_\lambda$ as published")]
     cols, cells = [], {p[2]: [] for p in pairs}
     fills = {"ScenPO-SS": [], "ScenPO-SS-bands": []}
     for c in configs:
@@ -327,6 +331,9 @@ def table_variants(results: str, out: str, configs: list[str]) -> None:
         cols.append(c)
         piv = R["ep"].pivot(index="episode", columns="policy", values="cost_total")
         for a, b, lab in pairs:
+            if a not in piv or b not in piv:
+                cells[lab].append("--")
+                continue
             r = paired_test(piv[a].values, piv[b].values)
             txt = f"{100 * r['mean_rel_diff']:+.1f}"
             cells[lab].append(r"\textbf{" + txt + "}" if (r["ci_hi"] < 0 or r["ci_lo"] > 0) else txt)

@@ -1,0 +1,23 @@
+spec,val_cost
+"{""kind"": ""ul"", ""lam"": 1, ""alpha"": 0.925, ""beta"": 0.925, ""net_waste"": false}",15947.000558616566
+"{""kind"": ""ul"", ""lam"": 1, ""alpha"": 0.95, ""beta"": 0.95, ""net_waste"": false}",15997.966913665381
+"{""kind"": ""ul"", ""lam"": 2, ""alpha"": 0.8, ""beta"": 0.8, ""net_waste"": false}",16031.045044778239
+"{""kind"": ""ul"", ""lam"": 1, ""alpha"": 0.96, ""beta"": 0.96, ""net_waste"": false}",16125.490726438757
+"{""kind"": ""ul"", ""lam"": 1, ""alpha"": 0.9, ""beta"": 0.9, ""net_waste"": false}",16187.562255347115
+"{""kind"": ""ul"", ""lam"": 2, ""alpha"": 0.85, ""beta"": 0.85, ""net_waste"": false}",16191.12260590788
+"{""kind"": ""ul"", ""lam"": 1, ""alpha"": 0.97, ""beta"": 0.97, ""net_waste"": false}",16285.67015177664
+"{""kind"": ""ul"", ""lam"": 2, ""alpha"": 0.875, ""beta"": 0.875, ""net_waste"": false}",16318.037506406328
+"{""kind"": ""ul"", ""lam"": 1, ""alpha"": 0.975, ""beta"": 0.975, ""net_waste"": false}",16419.485024309542
+"{""kind"": ""ul"", ""lam"": 1, ""alpha"": 0.875, ""beta"": 0.875, ""net_waste"": false}",16457.928498083766
+"{""kind"": ""ul"", ""lam"": 2, ""alpha"": 0.9, ""beta"": 0.9, ""net_waste"": false}",16534.12036241809
+"{""kind"": ""ul"", ""lam"": 1, ""alpha"": 0.98, ""beta"": 0.98, ""net_waste"": false}",16674.327748464442
+"{""kind"": ""ul"", ""lam"": 2, ""alpha"": 0.925, ""beta"": 0.925, ""net_waste"": false}",16864.24026164688
+"{""kind"": ""ul"", ""lam"": 1, ""alpha"": 0.85, ""beta"": 0.85, ""net_waste"": false}",16898.928362882856
+"{""kind"": ""ul"", ""lam"": 2, ""alpha"": 0.95, ""beta"": 0.95, ""net_waste"": false}",17217.149270188227
+"{""kind"": ""ul"", ""lam"": 1, ""alpha"": 0.99, ""beta"": 0.99, ""net_waste"": false}",17286.21180386367
+"{""kind"": ""ul"", ""lam"": 2, ""alpha"": 0.96, ""beta"": 0.96, ""net_waste"": false}",17457.376373548494
+"{""kind"": ""ul"", ""lam"": 2, ""alpha"": 0.97, ""beta"": 0.97, ""net_waste"": false}",17649.463834187256
+"{""kind"": ""ul"", ""lam"": 2, ""alpha"": 0.975, ""beta"": 0.975, ""net_waste"": false}",17767.102305066288
+"{""kind"": ""ul"", ""lam"": 2, ""alpha"": 0.98, ""beta"": 0.98, ""net_waste"": false}",17934.909806089996
+"{""kind"": ""ul"", ""lam"": 2, ""alpha"": 0.99, ""beta"": 0.99, ""net_waste"": false}",18290.53228761342
+"{""kind"": ""ul"", ""lam"": 1, ""alpha"": 0.8, ""beta"": 0.8, ""net_waste"": false}",18475.659734960867

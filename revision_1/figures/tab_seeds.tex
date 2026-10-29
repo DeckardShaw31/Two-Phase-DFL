@@ -4,33 +4,47 @@ Setting & Comparison & Selected (\%) & Seed 0 & Seed 1 & Seed 2 \\
 \midrule
 Base (fresh test) & UL-DFL vs UL$_\lambda$ & -1.00 & -1.00 & -0.97 & -0.93 \\
 Base (fresh test) & NN-DFL vs UL$_\lambda$ & +0.87 & +0.56 & +0.96 & +0.87 \\
+Base (fresh test) & NB-DFL vs UL$_\lambda$ & +0.68 & +0.64 & +0.68 & +1.01 \\
 Base & UL-DFL vs UL$_\lambda$ & -0.81 & -0.81 & -0.76 & -0.92 \\
 Base & NN-DFL vs UL$_\lambda$ & +1.25 & +1.22 & +1.13 & +1.25 \\
+Base & NB-DFL vs UL$_\lambda$ & +0.99 & +0.96 & +0.99 & +1.26 \\
 Base & LA-DFL vs LA-Quantile & -4.73 & -3.59 & -4.73 & -3.48 \\
 Clustered & UL-DFL vs UL$_\lambda$ & -1.18 & -1.18 & -1.17 & -1.13 \\
 Clustered & NN-DFL vs UL$_\lambda$ & -0.05 & +0.01 & -0.05 & +0.15 \\
+Clustered & NB-DFL vs UL$_\lambda$ & -0.26 & -0.21 & -0.26 & +0.21 \\
 Mixed & UL-DFL vs UL$_\lambda$ & -1.00 & -1.00 & -1.02 & -0.94 \\
 Mixed & NN-DFL vs UL$_\lambda$ & +0.26 & +0.22 & +0.00 & +0.26 \\
+Mixed & NB-DFL vs UL$_\lambda$ & -0.04 & +0.00 & -0.04 & +0.29 \\
 $m=2$ & UL-DFL vs UL$_\lambda$ & -1.09 & -1.08 & -0.97 & -1.09 \\
 $m=2$ & NN-DFL vs UL$_\lambda$ & -0.53 & -0.61 & -0.55 & -0.53 \\
+$m=2$ & NB-DFL vs UL$_\lambda$ & -0.48 & -0.38 & -0.26 & -0.48 \\
 $m=4$ & UL-DFL vs UL$_\lambda$ & -0.27 & -0.27 & -0.26 & -0.18 \\
 $m=4$ & NN-DFL vs UL$_\lambda$ & +2.46 & +2.37 & +2.45 & +2.37 \\
+$m=4$ & NB-DFL vs UL$_\lambda$ & +1.66 & +1.66 & +2.06 & +1.94 \\
 $p_u=10$ & UL-DFL vs UL$_\lambda$ & -1.00 & -0.95 & -1.00 & -0.92 \\
 $p_u=10$ & NN-DFL vs UL$_\lambda$ & +1.07 & +1.19 & +1.17 & +1.07 \\
+$p_u=10$ & NB-DFL vs UL$_\lambda$ & +0.77 & +0.83 & +0.77 & +0.85 \\
 $p_u=40$ & UL-DFL vs UL$_\lambda$ & -0.95 & -0.96 & -0.95 & -0.96 \\
 $p_u=40$ & NN-DFL vs UL$_\lambda$ & +0.51 & +0.51 & +0.53 & +0.99 \\
+$p_u=40$ & NB-DFL vs UL$_\lambda$ & +1.10 & +1.39 & +1.10 & +1.40 \\
 $\rho=1.10$ & UL-DFL vs UL$_\lambda$ & -0.66 & -0.66 & -0.64 & -0.61 \\
 $\rho=1.10$ & NN-DFL vs UL$_\lambda$ & +0.77 & +0.47 & +0.77 & +0.87 \\
+$\rho=1.10$ & NB-DFL vs UL$_\lambda$ & +0.68 & +0.71 & +0.68 & +0.83 \\
 $\rho=1.60$ & UL-DFL vs UL$_\lambda$ & -0.30 & -0.30 & -0.30 & -0.34 \\
 $\rho=1.60$ & NN-DFL vs UL$_\lambda$ & +1.50 & +1.64 & +1.71 & +1.50 \\
+$\rho=1.60$ & NB-DFL vs UL$_\lambda$ & +1.29 & +1.31 & +1.29 & +1.26 \\
 High var. & UL-DFL vs UL$_\lambda$ & +0.07 & +0.12 & +0.07 & -0.12 \\
 High var. & NN-DFL vs UL$_\lambda$ & +0.91 & +0.77 & +0.96 & +0.91 \\
+High var. & NB-DFL vs UL$_\lambda$ & +1.27 & +1.39 & +1.27 & +1.58 \\
 $c^{\mathrm{r}}=3$ & UL-DFL vs UL$_\lambda$ & -0.89 & -1.01 & -0.89 & -0.83 \\
 $c^{\mathrm{r}}=3$ & NN-DFL vs UL$_\lambda$ & +4.33 & +4.42 & +4.39 & +4.33 \\
+$c^{\mathrm{r}}=3$ & NB-DFL vs UL$_\lambda$ & +4.23 & +4.04 & +4.23 & +4.10 \\
 30\% LIFO & UL-DFL vs UL$_\lambda$ & -0.79 & -0.79 & -0.74 & -0.80 \\
 30\% LIFO & NN-DFL vs UL$_\lambda$ & +1.74 & +1.63 & +1.97 & +1.74 \\
+30\% LIFO & NB-DFL vs UL$_\lambda$ & +1.44 & +1.38 & +1.44 & +1.55 \\
 30\% LIFO & LA-DFL vs LA-Quantile & -4.77 & -4.35 & -4.77 & -3.32 \\
 Real data & UL-DFL vs UL$_\lambda$ & +0.67 & +0.55 & +0.13 & +0.67 \\
 Real data & NN-DFL vs UL$_\lambda$ & +1.20 & +1.48 & +1.20 & +1.48 \\
+Real data & NB-DFL vs UL$_\lambda$ & +1.16 & +1.16 & +1.31 & +1.72 \\
 \bottomrule
 \end{tabular}

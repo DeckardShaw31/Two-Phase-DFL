@@ -1,0 +1,13 @@
+policy,spec,val_cost
+PTO-Q2-H4,"{""kind"": ""lookahead"", ""time_limit"": 20.0, ""gap"": 0.005, ""integer_days"": 1, ""target"": ""quantile2"", ""param"": [0.9, 0.6]}",11779.518854963899
+PTO-Q2-H4,"{""kind"": ""lookahead"", ""time_limit"": 20.0, ""gap"": 0.005, ""integer_days"": 1, ""target"": ""quantile2"", ""param"": [0.9, 0.7]}",11606.086546046927
+PTO-Q2-H4,"{""kind"": ""lookahead"", ""time_limit"": 20.0, ""gap"": 0.005, ""integer_days"": 1, ""target"": ""quantile2"", ""param"": [0.9, 0.8]}",11840.136080577662
+PTO-Q2-H4,"{""kind"": ""lookahead"", ""time_limit"": 20.0, ""gap"": 0.005, ""integer_days"": 1, ""target"": ""quantile2"", ""param"": [0.95, 0.6]}",11971.819475247019
+PTO-Q2-H4,"{""kind"": ""lookahead"", ""time_limit"": 20.0, ""gap"": 0.005, ""integer_days"": 1, ""target"": ""quantile2"", ""param"": [0.95, 0.7]}",11899.294011089047
+PTO-Q2-H4,"{""kind"": ""lookahead"", ""time_limit"": 20.0, ""gap"": 0.005, ""integer_days"": 1, ""target"": ""quantile2"", ""param"": [0.95, 0.8]}",12270.375780539514
+PTO-Q2-H5,"{""kind"": ""lookahead"", ""time_limit"": 20.0, ""gap"": 0.005, ""integer_days"": 1, ""target"": ""quantile2"", ""param"": [0.9, 0.6]}",11719.34617228134
+PTO-Q2-H5,"{""kind"": ""lookahead"", ""time_limit"": 20.0, ""gap"": 0.005, ""integer_days"": 1, ""target"": ""quantile2"", ""param"": [0.9, 0.7]}",11578.108919796145
+PTO-Q2-H5,"{""kind"": ""lookahead"", ""time_limit"": 20.0, ""gap"": 0.005, ""integer_days"": 1, ""target"": ""quantile2"", ""param"": [0.9, 0.8]}",12027.220175557908
+PTO-Q2-H5,"{""kind"": ""lookahead"", ""time_limit"": 20.0, ""gap"": 0.005, ""integer_days"": 1, ""target"": ""quantile2"", ""param"": [0.95, 0.6]}",11891.761481040321
+PTO-Q2-H5,"{""kind"": ""lookahead"", ""time_limit"": 20.0, ""gap"": 0.005, ""integer_days"": 1, ""target"": ""quantile2"", ""param"": [0.95, 0.7]}",11892.014404931388
+PTO-Q2-H5,"{""kind"": ""lookahead"", ""time_limit"": 20.0, ""gap"": 0.005, ""integer_days"": 1, ""target"": ""quantile2"", ""param"": [0.95, 0.8]}",12566.634365624763

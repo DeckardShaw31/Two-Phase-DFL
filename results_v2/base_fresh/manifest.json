@@ -87,8 +87,8 @@
     "UL-coarse": {
       "kind": "ul",
       "lam": 1,
-      "alpha": 0.95,
-      "beta": 0.9
+      "alpha": 0.96,
+      "beta": 0.85
     },
     "UL-DFL-coarse": {
       "kind": "ul_dfl"
@@ -96,7 +96,8 @@
     "ScenPO-SS-bands": {
       "kind": "lookahead",
       "target": "scenario",
-      "n_scen": 10,
+      "sampler": "jia",
+      "n_scen": 20,
       "time_limit": 60.0,
       "gap": 0.005,
       "integer_days": 1
@@ -118,6 +119,25 @@
     },
     "NN-DFL@s2": {
       "kind": "nn_dfl"
+    },
+    "NB-DFL@s0": {
+      "kind": "nb_dfl"
+    },
+    "NB-DFL@s1": {
+      "kind": "nb_dfl"
+    },
+    "NB-DFL@s2": {
+      "kind": "nb_dfl"
+    },
+    "NB-DFL": {
+      "kind": "nb_dfl"
+    },
+    "UL-orig": {
+      "kind": "ul",
+      "lam": 1,
+      "alpha": 0.95,
+      "beta": 0.95,
+      "net_waste": false
     }
   },
   "note": "fresh test episodes; policies tuned and trained in results/base, nothing re-tuned here"

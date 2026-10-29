@@ -22,8 +22,9 @@ def make_policy(spec: dict, inst: Instance, router: SubsetRouting):
     if kind == "bsp_ew":
         return BaseStockPolicy(inst, router, R=spec["R"], alpha=spec["alpha"], waste_aware=True)
     if kind == "ul":
-        return ULPolicy(inst, router, lam=spec["lam"], alpha=spec["alpha"], beta=spec["beta"])
-    if kind in ("ul_dfl", "nn_dfl"):  # the model's own kind decides rule correction vs direct order
+        return ULPolicy(inst, router, lam=spec["lam"], alpha=spec["alpha"], beta=spec["beta"],
+                        net_waste=spec.get("net_waste", True))
+    if kind in ("ul_dfl", "nn_dfl", "nb_dfl"):  # the model's own kind decides rule correction vs direct order
         from .rule_dfl import ULDFLModel, ULDFLPolicy
         return ULDFLPolicy(inst, router, ULDFLModel.from_state(spec["dfl_state"]))
     if kind == "lookahead":

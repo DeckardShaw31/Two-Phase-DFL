@@ -18,6 +18,11 @@ NN-DFL (ablation) uses the same inputs, differentiable dynamics, loss, seeds and
 but none of the rule's structure: the network outputs the order quantity directly,
 q = m * relu(1 + delta_theta(phi)) with m the store's mean demand, a store is visited whenever
 q > 0, and training starts from ordering one day of mean demand every day.
+
+NB-DFL (ablation) keeps the order-up-to structure but neither the forecast quantile nor the visit
+trigger of the rule: the network outputs the order-up-to level S = m * relu(1 + delta_theta(phi)),
+the store receives S minus its usable stock (stock net of units projected to expire today), is
+visited whenever that is positive, and training starts from a level of one day of mean demand.
 """
 
 from __future__ import annotations
@@ -102,7 +107,7 @@ class ULDFLPolicy:
 
     def __init__(self, inst: Instance, router: SubsetRouting, model: ULDFLModel):
         self.inst, self.router, self.model = inst, router, model
-        self.name = "NN-DFL" if model.kind == "nn" else "UL-DFL"
+        self.name = {"nn": "NN-DFL", "nb": "NB-DFL"}.get(model.kind, "UL-DFL")
 
     def decide(self, ctx: Context) -> tuple[np.ndarray, dict]:
         md = self.model
@@ -111,6 +116,10 @@ class ULDFLPolicy:
                                  stock_features(ctx.B, md.mean_store)])
         if md.kind == "nn":
             q = md.mean_store * np.maximum(1.0 + md.delta(feats), 0.0)
+            return repair(q, np.zeros_like(q), self.router, self.inst, ctx.B), {}
+        if md.kind == "nb":
+            S = md.mean_store * np.maximum(1.0 + md.delta(feats), 0.0)
+            q = np.maximum(S - (ctx.B.sum(1) - projected_waste(ctx.B, ctx.mu, 1)), 0.0)
             return repair(q, np.zeros_like(q), self.router, self.inst, ctx.B), {}
         S, scale, thr, lam = rule_terms(ctx.mu, ctx.qs, md.lam, md.alpha, md.beta)
         S = S + scale * md.delta(feats)
@@ -183,6 +192,9 @@ def rollout_cost(md: ULDFLModel, inst: Instance, tens, lam: int) -> torch.Tensor
         stock = B.sum(-1)
         if md.kind == "nn":
             q = ms * torch.relu(1.0 + md.net((x - xm) / xs))
+        elif md.kind == "nb":
+            Sx = ms * torch.relu(1.0 + md.net((x - xm) / xs))
+            q = torch.relu(Sx - (stock - _torch_projected_waste(B, MU[:, t], 1)))
         else:
             Sx = S[:, t] + SC[:, t] * md.net((x - xm) / xs)
             trig = (stock < TH[:, t]).to(B.dtype).detach()
@@ -210,14 +222,15 @@ def train_ul_dfl(inst: Instance, D: dict, spec: dict, val_fn, start: int, n_days
     x_std = np.concatenate([Fs.std(0) + 1e-6, np.full(m1, 0.5), [1.0]])
     md = ULDFLModel(spec["lam"], spec["alpha"], spec["beta"], D["mean_store"], len(x_mean), x_mean, x_std,
                     kind=kind)
-    tag = "NN-DFL" if kind == "nn" else "UL-DFL"
+    tag = {"nn": "NN-DFL", "nb": "NB-DFL"}.get(kind, "UL-DFL")
     lam = min(spec["lam"], H)
     opt = torch.optim.Adam(md.net.parameters(), lr=lr)
     scale = float(D["mean_store"].sum() * inst.costs.p_lost) * n_days / 10.0
     best_state = md.state()
     best_val = val_fn(best_state)
     history = [{"epoch": 0, "val_cost": best_val, "train_loss": np.nan}]
-    log(f"  {tag} epoch 0 ({'one mean day per day' if kind == 'nn' else 'tuned UL'}) val={best_val:.2f}")
+    start = {"nn": "one mean day per day", "nb": "up to one mean day"}.get(kind, "tuned UL")
+    log(f"  {tag} epoch 0 ({start}) val={best_val:.2f}")
     for ep in range(1, epochs + 1):
         order = rng.permutation(n_train)
         losses = []

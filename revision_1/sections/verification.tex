@@ -14,7 +14,7 @@ Theorem~\ref{thm:fifo}(ii) & 3,000 random recourse instances ($m\in\{2,3,4\}$, $
 Theorem~\ref{thm:fifo}(iii) & $V_{\mathrm{LP}}\le C_{\mathrm{FIFO}}$ in the same instances & holds in 3,000/3,000; equality in 63\% \\
 Proposition~\ref{prop:marginal}(a) & dual bounds $[-p_u,p_s]$; subgradient inequality in 9,000 random directions & 3,000/3,000; 9,000/9,000 \\
 Proposition~\ref{prop:marginal}(b) & autograd derivative of $C_{\mathrm{FIFO}}$ within \eqref{eq:marg} & 3,000/3,000; bound attained in 71\% \\
-Proposition~\ref{prop:dfl} & $m=1$, negative-binomial demand (mean 15), SGD on the decision-focused loss & learned target 20.03; empirical 0.8-quantile 20.0; $F(\tilde d)=0.809$ vs.\ $p_u/(p_u+p_s)=0.8$ \\
+Proposition~\ref{prop:dfl}(c) & $m=1$, negative-binomial demand (mean 15), SGD on the decision-focused loss (with $m=1$ both learners deliver the learned quantity, so the check covers (a) and (b)) & learned target 20.03; empirical 0.8-quantile 20.0; $F(\tilde d)=0.809$ vs.\ $p_u/(p_u+p_s)=0.8$ \\
 Coverage layer & 40 lookahead MILPs; deliveries implied by the visit pattern vs.\ MILP deliveries & 98.7\% of delivered volume reproduced (mean relative $L_1$ deviation 1.3\%) \\
 \bottomrule
 \end{tabular}

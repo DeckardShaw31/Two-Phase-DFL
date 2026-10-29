@@ -26,7 +26,7 @@ from experiments.retrain_uldfl import fine_rule
 from experiments.retune_ul import ORDER as CONFIG_ORDER
 from experiments.run_config import log, summarise
 
-MAIN = ["BSP", "BSP-EW", "UL", "UL-DFL", "NN-DFL", "PTO-Mean", "PTO-Q", "PTO-Q2", "Robust", "ScenPO-SS", "DFL", "PI"]
+MAIN = ["BSP", "BSP-EW", "UL", "UL-DFL", "NN-DFL", "NB-DFL", "PTO-Mean", "PTO-Q", "PTO-Q2", "Robust", "ScenPO-SS", "DFL", "PI"]
 FIRST = {"UL": "UL-coarse", "UL-DFL": "UL-DFL-coarse", "ScenPO-SS": "ScenPO-SS-bands"}
 
 
@@ -41,17 +41,22 @@ def fold(c: str, results: str) -> pd.DataFrame:
     test = pd.read_csv(os.path.join(run, "test_episodes.csv"))
     if "UL-coarse" not in set(test.policy):
         test["policy"] = test.policy.map(rename_first)
-    new = set(FIRST) | {p for p in test.policy if p.startswith("UL-DFL@")}
+    new = set(FIRST) | {"UL-orig"} | {p for p in test.policy if p.startswith(("UL-DFL@", "NB-DFL"))}
     test = test[~test.policy.isin(new)]
     rule = pd.read_csv(os.path.join(run, "ul_retune_test_episodes.csv")).assign(policy="UL")
     dfl = pd.read_csv(os.path.join(run, "uldfl_fine_test_episodes.csv"))
     dfl["policy"] = dfl.policy.str.replace("UL-DFL-fine", "UL-DFL", regex=False)
     scen = pd.read_csv(os.path.join(run, "scenpo_jia_test_episodes.csv")).assign(policy="ScenPO-SS")
-    test = pd.concat([test, rule, dfl, scen], ignore_index=True)
+    parts = [test, rule, dfl, scen]
+    for extra in ("nbdfl_test_episodes.csv", "ul_orig_test_episodes.csv"):  # run_nbdfl.py, ul_original.py
+        if os.path.exists(os.path.join(run, extra)):
+            parts.append(pd.read_csv(os.path.join(run, extra)))
+    test = pd.concat(parts, ignore_index=True)
     n = test.groupby("policy").size()
     assert n.nunique() == 1, f"{c}: unequal episode counts {n.to_dict()}"
     test.to_csv(os.path.join(run, "test_episodes.csv"), index=False)
     order = [k for k in MAIN if k in set(test.policy)] + list(FIRST.values())
+    order += ["UL-orig"] if "UL-orig" in set(test.policy) else []
     order += sorted(k for k in set(test.policy) if "@s" in k)
     summ, _ = summarise(test, order, run)
 

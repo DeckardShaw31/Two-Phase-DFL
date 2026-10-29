@@ -37,8 +37,8 @@ from pirp.setup import EVAL_DAYS, HIST, TAIL, make_instance, prepare
 SEED_OFFSET = 20000
 SCENPO = dict(kind="lookahead", target="scenario", sampler="jia", n_scen=20, time_limit=60.0, gap=0.005,
               integer_days=1)
-ORDER = ["BSP", "BSP-EW", "UL", "UL-DFL", "NN-DFL", "PTO-Mean", "PTO-Q", "PTO-Q2", "Robust", "ScenPO-SS", "DFL",
-         "PI", "UL-coarse", "UL-DFL-coarse", "ScenPO-SS-bands"]
+ORDER = ["BSP", "BSP-EW", "UL", "UL-DFL", "NN-DFL", "NB-DFL", "PTO-Mean", "PTO-Q", "PTO-Q2", "Robust", "ScenPO-SS", "DFL",
+         "PI", "UL-coarse", "UL-DFL-coarse", "ScenPO-SS-bands", "UL-orig"]
 
 
 def fresh_data(cfg, D: dict, n: int, cache: str) -> dict:
@@ -64,6 +64,14 @@ def policies(results: str) -> dict:
                   "ScenPO-SS-bands": old["ScenPO-SS"]})
     specs.update({k: fine[k] for k in fine if k.startswith("UL-DFL@")})
     specs.update({k: old[k] for k in old if k.startswith("NN-DFL@")})
+    nb_path = os.path.join(run, "nbdfl_policies.joblib")  # neural base-stock ablation (run_nbdfl.py)
+    if os.path.exists(nb_path):
+        nb = joblib.load(nb_path)
+        specs.update({k: v for k, v in nb.items() if k.startswith("NB-DFL")})
+    orig_path = os.path.join(run, "ul_orig_val.csv")  # the rule as published (ul_original.py)
+    if os.path.exists(orig_path):
+        orig = pd.read_csv(orig_path)
+        specs["UL-orig"] = json.loads(orig.loc[orig.val_cost.idxmin(), "spec"])
     return specs
 
 
