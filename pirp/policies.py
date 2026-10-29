@@ -168,9 +168,10 @@ class LookaheadPolicy:
 
     def __init__(self, inst: Instance, router: SubsetRouting, target: str, param: float = 0.0, n_scen: int = 1,
                  time_limit: float = 20.0, gap: float = 0.005, dfl_model=None, name: str | None = None,
-                 integer_days: int | None = None):
+                 integer_days: int | None = None, sampler: str = "bands"):
         self.inst, self.router, self.target, self.param = inst, router, target, param
         self.n_scen = n_scen if target == "scenario" else 1
+        self.sampler = sampler
         self.time_limit, self.gap = time_limit, gap
         self.dfl_model = dfl_model
         self.integer_days = integer_days
@@ -198,7 +199,8 @@ class LookaheadPolicy:
         if self.target == "robust":
             return robust_targets(ctx.mu, ctx.qs, self.param)
         if self.target == "scenario":
-            return sample_scenarios(ctx.qs, self.n_scen, ctx.seed)
+            sample = sample_scenarios_jia if self.sampler == "jia" else sample_scenarios
+            return sample(ctx.qs, self.n_scen, ctx.seed)
         if self.target == "pi":
             return ctx.future
         if self.target == "dfl":
@@ -244,10 +246,12 @@ def robust_targets(mu: np.ndarray, qs: np.ndarray, gamma: float) -> np.ndarray:
 
 
 def sample_scenarios(qs: np.ndarray, n_scen: int, seed: int) -> np.ndarray:
-    """Jia et al. (2025) scenario sampling from multi-horizon quantile forecasts.
+    """Band sampling over the full quantile grid (the first implementation of ScenPO-SS).
 
     For each scenario a quantile band [tau_b, tau_{b+1}] is drawn uniformly; every
-    (store, day) value is then drawn uniformly between the two predicted quantiles.
+    (store, day) value is then drawn uniformly between the two predicted quantiles. Because
+    QUANTILE_LEVELS is not equally spaced, this over-weights the tails (three of the twelve
+    bands lie above the 0.9 quantile); sample_scenarios_jia follows the published method.
     """
     rng = np.random.default_rng(seed)
     N, H, L = qs.shape
@@ -256,4 +260,29 @@ def sample_scenarios(qs: np.ndarray, n_scen: int, seed: int) -> np.ndarray:
         b = rng.integers(0, L - 1)
         u = rng.random((N, H))
         out[s] = qs[..., b] + u * (qs[..., b + 1] - qs[..., b])
+    return out
+
+
+DECILES = np.round(np.arange(0.1, 0.95, 0.1), 2)
+
+
+def sample_scenarios_jia(qs: np.ndarray, n_scen: int, seed: int) -> np.ndarray:
+    """Scenario set of Jia et al. (2025): the predicted deciles plus scenarios sampled between them.
+
+    As in the published method, the predicted quantiles 0.1, ..., 0.9 are themselves scenarios;
+    each further scenario draws one band between neighbouring deciles uniformly (the bands have
+    equal probability mass) and then every (store, day) value uniformly inside that band. All
+    n_scen scenarios are equally weighted.
+    """
+    idx = [int(np.where(np.isclose(QUANTILE_LEVELS, a))[0][0]) for a in DECILES]
+    dq = qs[..., idx]
+    L = len(idx)
+    assert n_scen >= L, "the scenario set contains every predicted decile"
+    rng = np.random.default_rng(seed)
+    out = np.empty((n_scen,) + dq.shape[:-1])
+    out[:L] = np.moveaxis(dq, -1, 0)
+    for s in range(L, n_scen):
+        b = rng.integers(0, L - 1)
+        u = rng.random(dq.shape[:-1])
+        out[s] = dq[..., b] + u * (dq[..., b + 1] - dq[..., b])
     return out

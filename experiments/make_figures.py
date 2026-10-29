@@ -29,7 +29,7 @@ TEX = {"BSP": "BSP", "BSP-EW": "BSP-EW", "UL": r"UL$_\lambda$", "UL-DFL": "UL-DF
 CONFIG_LABEL = {"base": "Base", "net_c1": "Clustered", "net_rc1": "Mixed", "m2": r"$m=2$", "m4": r"$m=4$",
                 "pu10": r"$p_u=10$", "pu40": r"$p_u=40$", "fleet_tight": r"$\rho=1.10$",
                 "fleet_loose": r"$\rho=1.60$", "highvar": "High var.", "route3": r"$c^{\mathrm{r}}=3$",
-                "lifo": "30\\% LIFO", "fresh": "Real data"}
+                "lifo": "30\\% LIFO", "fresh": "Real data", "base_fresh": "Base (fresh test)"}
 CONFIGS = ["base", "net_c1", "net_rc1", "m2", "m4", "pu10", "pu40", "fleet_tight", "fleet_loose", "highvar", "route3",
            "lifo", "fresh"]
 GREY = "#6b6b6b"
@@ -44,6 +44,9 @@ def load(results: str, name: str):
     tests = pd.read_csv(os.path.join(d, "paired_tests.csv"))
     summ = pd.read_csv(os.path.join(d, "test_summary.csv"), index_col=0)
     man = json.load(open(os.path.join(d, "manifest.json")))
+    if name == "base_fresh":  # fresh test episodes of the base case: network data from the base run
+        base = json.load(open(os.path.join(results, "base", "manifest.json")))
+        man = {**base, "chosen": man["chosen"], "episode_seeds": man["episode_seeds"]}
     return {"ep": ep, "tests": tests, "summ": summ, "man": man, "dir": d}
 
 
@@ -79,6 +82,8 @@ def table_tests(R: dict, out: str, prop: str = "DFL", fname: str = "tab_tests.te
     rows = []
     for _, r in t.iterrows():
         other = r.comparison.replace(f"{prop} - ", "")
+        if other not in ORDER:  # first versions of UL, UL-DFL and ScenPO-SS: see table_variants
+            continue
         holm_p = fmt_p(r.p_holm_t) if r.primary else "--"
         rows.append(f"{TEX[prop]} $-$ {TEX.get(other, other)} & {r.mean_diff:,.1f} & [{r.ci_lo:,.1f}, {r.ci_hi:,.1f}] & "
                     f"{100 * r.mean_rel_diff:.1f} & {100 * r.win_rate:.0f} & {fmt_p(r.p_t)} & {fmt_p(r.p_wilcoxon)} & "
@@ -212,11 +217,20 @@ def fig_sensitivity(df: pd.DataFrame, out: str, configs: list[str]) -> None:
     plt.close(fig)
 
 
+def store_detour_per_unit(man: dict) -> np.ndarray:
+    """Extra travel of inserting each store into a tour through all stores, per unit of its mean demand."""
+    from pirp.network import build_network, held_karp_all_subsets
+    n = man["config"]["n_stores"]
+    _, dist = build_network(man["config"]["layout"], n)
+    tour = held_karp_all_subsets(dist)
+    full = (1 << n) - 1
+    detour = np.array([tour[full] - tour[full & ~(1 << i)] for i in range(n)])
+    return detour / np.asarray(man["mean_store_demand"])
+
+
 def fig_store_service(R: dict, out: str) -> None:
     ep = R["ep"]
-    from pirp.network import build_network
-    coords, dist = build_network(R["man"]["config"]["layout"], R["man"]["config"]["n_stores"])
-    d0 = dist[0, 1:]
+    d0 = store_detour_per_unit(R["man"])
     fig, ax = plt.subplots(figsize=(5.2, 3.2))
     for p, mk, col in (("BSP-EW", "s", "#8c8c8c"), ("UL", "^", "#b5b5b5"), ("UL-DFL", "v", "#4c72b0"),
                        ("PTO-Q", "o", "#dd8452"), ("ScenPO-SS", "D", "#55a868"), ("DFL", "*", "#c44e52")):
@@ -226,7 +240,7 @@ def fig_store_service(R: dict, out: str) -> None:
         fills = np.array([ast.literal_eval(v) for v in sub.store_fill]).mean(0)
         order = np.argsort(d0)
         ax.plot(d0[order], 100 * fills[order], marker=mk, color=col, lw=0.8, ms=4, label=LABEL[p])
-    ax.set_xlabel("Distance from depot")
+    ax.set_xlabel("Detour per unit of demand")
     ax.set_ylabel("Store fill rate (%)")
     ax.legend(fontsize=7, frameon=False)
     ax.spines[["top", "right"]].set_visible(False)
@@ -237,8 +251,11 @@ def fig_store_service(R: dict, out: str) -> None:
 
 def fig_dfl_training(R: dict, out: str) -> None:
     """Validation cost by epoch and training seed: LA-DFL (left) and UL-DFL (right)."""
+    ul_hist = "uldfl_fine_training.csv"  # UL-DFL trained from the rule tuned on the fine grid
+    if not os.path.exists(os.path.join(R["dir"], ul_hist)):
+        ul_hist = "ul_dfl_training.csv"
     panels = [(f, lab) for f, lab in (("dfl_training.csv", "LA-DFL epoch (0 = tuned LA-Quantile)"),
-                                      ("ul_dfl_training.csv", r"UL-DFL epoch (0 = tuned UL$_\lambda$)"))
+                                      (ul_hist, r"UL-DFL epoch (0 = tuned UL$_\lambda$)"))
               if os.path.exists(os.path.join(R["dir"], f))]
     if not panels:
         return
@@ -283,10 +300,48 @@ def table_seeds(results: str, out: str, configs: list[str]) -> None:
 
 
 MACRO = {"BSP": "BSP", "BSP-EW": "BSPEW", "UL": "UL", "UL-DFL": "ULDFL", "NN-DFL": "NNDFL", "PTO-Mean": "LAMean", "PTO-Q": "LAQ",
-         "PTO-Q2": "LAQTwo", "Robust": "LARob", "ScenPO-SS": "ScenPO", "DFL": "DFL", "PI": "PI"}
+         "PTO-Q2": "LAQTwo", "Robust": "LARob", "ScenPO-SS": "ScenPO", "DFL": "DFL", "PI": "PI",
+         "UL-coarse": "ULcoarse", "UL-DFL-coarse": "ULDFLcoarse", "ScenPO-SS-bands": "ScenPObands"}
 CFG_MACRO = {"base": "Base", "net_c1": "NetCOne", "net_rc1": "NetRCOne", "fresh": "Fresh", "m2": "MTwo", "m4": "MFour", "pu10": "PuTen", "pu40": "PuForty",
              "fleet_tight": "FleetTight", "fleet_loose": "FleetLoose", "highvar": "HighVar", "route3": "RouteThree",
-             "lifo": "Lifo"}
+             "lifo": "Lifo", "base_fresh": "BaseFresh"}
+
+
+def table_variants(results: str, out: str, configs: list[str]) -> None:
+    """First versions against final versions of the rule, its learner and ScenPO-SS (appendix).
+
+    Paired cost differences in % of the second policy; bold: 95% paired bootstrap CI excludes zero.
+    """
+    from pirp.evaluation import paired_test
+    pairs = [("UL", "UL-coarse", r"UL$_\lambda$, fine vs.\ coarse grid"),
+             ("UL-DFL-coarse", "UL-coarse", r"UL-DFL vs.\ UL$_\lambda$, both coarse (first version)"),
+             ("UL-DFL-coarse", "UL", r"UL-DFL from coarse rule vs.\ UL$_\lambda$ fine"),
+             ("UL-DFL", "UL", r"UL-DFL vs.\ UL$_\lambda$, both fine (reported)"),
+             ("ScenPO-SS", "ScenPO-SS-bands", r"ScenPO-SS, Jia et al.\ vs.\ band sampling")]
+    cols, cells = [], {p[2]: [] for p in pairs}
+    fills = {"ScenPO-SS": [], "ScenPO-SS-bands": []}
+    for c in configs:
+        R = load(results, c)
+        if R is None or "UL-coarse" not in set(R["ep"].policy):
+            continue
+        cols.append(c)
+        piv = R["ep"].pivot(index="episode", columns="policy", values="cost_total")
+        for a, b, lab in pairs:
+            r = paired_test(piv[a].values, piv[b].values)
+            txt = f"{100 * r['mean_rel_diff']:+.1f}"
+            cells[lab].append(r"\textbf{" + txt + "}" if (r["ci_hi"] < 0 or r["ci_lo"] > 0) else txt)
+        for k in fills:
+            fills[k].append(f"{100 * R['summ'].loc[k, 'fill']:.1f}")
+    if not cols:
+        return
+    lines = [f"{lab} & " + " & ".join(v) + r" \\" for lab, v in cells.items()]
+    lines.append(r"\midrule")
+    lines += [r"Fill rate (\%), ScenPO-SS, Jia et al. & " + " & ".join(fills["ScenPO-SS"]) + r" \\",
+              r"Fill rate (\%), ScenPO-SS, band sampling & " + " & ".join(fills["ScenPO-SS-bands"]) + r" \\"]
+    head = "Comparison (\\%) & " + " & ".join(CONFIG_LABEL[c] for c in cols) + r" \\"
+    tex = ("\\begin{tabular}{l" + "r" * len(cols) + "}\n\\toprule\n" + head + "\n\\midrule\n" + "\n".join(lines)
+           + "\n\\bottomrule\n\\end{tabular}\n")
+    open(os.path.join(out, "tab_variants.tex"), "w").write(tex)
 
 
 def write_numbers(results: str, out: str, configs: list[str]) -> None:
@@ -343,6 +398,9 @@ def write_numbers(results: str, out: str, configs: list[str]) -> None:
             m(f"alphaQ{cm}", f"{ch['PTO-Q']['param']}")
         if "Robust" in ch:
             m(f"gammaRob{cm}", f"{ch['Robust']['param']}")
+        if "UL" in ch:
+            m(f"alphaUL{cm}", f"{ch['UL']['alpha']}")
+            m(f"betaUL{cm}", f"{ch['UL']['beta']}")
         ep = R["ep"]
         look = ep[ep.policy.isin(["PTO-Mean", "PTO-Q", "PTO-Q2", "Robust", "ScenPO-SS", "DFL", "PI"])]
         m(f"maxgap{cm}", f"{100 * look.max_gap.max():.2f}")
@@ -377,17 +435,24 @@ def main():
     os.makedirs(a.out, exist_ok=True)
     configs = CONFIGS
     R = load(a.results, "base")
+    F = load(a.results, "base_fresh")  # primary hypotheses: base case on fresh test episodes
+    P = F if F is not None else R
     if R is not None:
-        table_base(R, a.out)
-        table_tests(R, a.out)
-        table_tests(R, a.out, "UL-DFL", "tab_tests_uldfl.tex")
-        fig_components(R, a.out)
-        fig_store_service(R, a.out)
+        table_base(P, a.out)
+        table_tests(P, a.out)
+        table_tests(P, a.out, "UL-DFL", "tab_tests_uldfl.tex")
+        fig_components(P, a.out)
+        fig_store_service(P, a.out)
         fig_dfl_training(R, a.out)
+        front = os.path.join(R["dir"], "rule_frontier.csv")
+        if os.path.exists(front):
+            from experiments.rule_frontier import fig_frontier
+            fig_frontier(pd.read_csv(front), R["ep"], a.out)
     df = table_sensitivity(a.results, a.out, configs)
     fig_sensitivity(df, a.out, configs)
-    table_seeds(a.results, a.out, configs)
-    write_numbers(a.results, a.out, configs)
+    table_seeds(a.results, a.out, (["base_fresh"] if F is not None else []) + configs)
+    table_variants(a.results, a.out, configs)
+    write_numbers(a.results, a.out, configs + (["base_fresh"] if F is not None else []))
     print("written to", a.out)
 
 

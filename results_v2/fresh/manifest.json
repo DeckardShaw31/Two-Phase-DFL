@@ -60,12 +60,6 @@
       "R": 1,
       "alpha": 0.95
     },
-    "UL": {
-      "kind": "ul",
-      "lam": 1,
-      "alpha": 0.95,
-      "beta": 0.9
-    },
     "PTO-Q": {
       "kind": "lookahead",
       "time_limit": 20.0,
@@ -100,14 +94,6 @@
       "integer_days": 1,
       "target": "mean"
     },
-    "ScenPO-SS": {
-      "kind": "lookahead",
-      "target": "scenario",
-      "n_scen": 10,
-      "time_limit": 60.0,
-      "gap": 0.005,
-      "integer_days": 1
-    },
     "PI": {
       "kind": "lookahead",
       "time_limit": 20.0,
@@ -122,18 +108,6 @@
       "integer_days": 1,
       "target": "dfl"
     },
-    "UL-DFL@s0": {
-      "kind": "ul_dfl"
-    },
-    "UL-DFL@s1": {
-      "kind": "ul_dfl"
-    },
-    "UL-DFL@s2": {
-      "kind": "ul_dfl"
-    },
-    "UL-DFL": {
-      "kind": "ul_dfl"
-    },
     "NN-DFL@s0": {
       "kind": "nn_dfl"
     },
@@ -145,6 +119,83 @@
     },
     "NN-DFL": {
       "kind": "nn_dfl"
+    },
+    "UL-coarse": {
+      "kind": "ul",
+      "lam": 1,
+      "alpha": 0.95,
+      "beta": 0.9
+    },
+    "ScenPO-SS-bands": {
+      "kind": "lookahead",
+      "target": "scenario",
+      "n_scen": 10,
+      "time_limit": 60.0,
+      "gap": 0.005,
+      "integer_days": 1
+    },
+    "UL-DFL-coarse@s0": {
+      "kind": "ul_dfl"
+    },
+    "UL-DFL-coarse@s1": {
+      "kind": "ul_dfl"
+    },
+    "UL-DFL-coarse@s2": {
+      "kind": "ul_dfl"
+    },
+    "UL-DFL-coarse": {
+      "kind": "ul_dfl"
+    },
+    "UL": {
+      "kind": "ul",
+      "lam": 1,
+      "alpha": 0.96,
+      "beta": 0.85
+    },
+    "UL-DFL": {
+      "kind": "ul_dfl",
+      "rule": {
+        "kind": "ul",
+        "lam": 1,
+        "alpha": 0.96,
+        "beta": 0.85
+      }
+    },
+    "ScenPO-SS": {
+      "kind": "lookahead",
+      "target": "scenario",
+      "sampler": "jia",
+      "n_scen": 20,
+      "time_limit": 60.0,
+      "gap": 0.005,
+      "integer_days": 1
+    },
+    "UL-DFL@s0": {
+      "kind": "ul_dfl",
+      "rule": {
+        "kind": "ul",
+        "lam": 1,
+        "alpha": 0.96,
+        "beta": 0.85
+      }
+    },
+    "UL-DFL@s1": {
+      "kind": "ul_dfl",
+      "rule": {
+        "kind": "ul",
+        "lam": 1,
+        "alpha": 0.96,
+        "beta": 0.85
+      }
+    },
+    "UL-DFL@s2": {
+      "kind": "ul_dfl",
+      "rule": {
+        "kind": "ul",
+        "lam": 1,
+        "alpha": 0.96,
+        "beta": 0.85
+      }
     }
   },
   "reused_from": null,
@@ -152,5 +203,6 @@
   "platform": "Windows-11-10.0.26200-SP0",
   "numpy": "2.2.6",
   "pandas": "2.3.3",
-  "runtime_sec": 621.1398103237152
+  "runtime_sec": 621.1398103237152,
+  "folded": "UL re-tuned on the fine grid (retune_ul.py), UL-DFL trained from it (retrain_uldfl.py), ScenPO-SS with the scenario set of Jia et al. (rerun_scenpo.py); first versions kept as UL-coarse, UL-DFL-coarse and ScenPO-SS-bands"
 }

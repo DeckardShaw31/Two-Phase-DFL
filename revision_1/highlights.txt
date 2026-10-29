@@ -1,0 +1,7 @@
+Highlights
+
+• Twelve perishable replenishment policies compared in closed loop on shared routes
+• Stock-age rules with optimal routing beat integrated plans unless travel is costly
+• Learned order-up-to levels make a well-tuned rule cheaper and less wasteful
+• On observed demand, the learned corrections did not transfer to new products
+• Deterministic plans over-stock; a day-specific safety quantile corrects this

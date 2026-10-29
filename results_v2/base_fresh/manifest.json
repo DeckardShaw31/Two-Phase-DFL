@@ -1,0 +1,124 @@
+{
+  "config": "base",
+  "episode_seeds": {
+    "test": "20000+e"
+  },
+  "n_test": 100,
+  "chosen": {
+    "BSP": {
+      "kind": "bsp",
+      "R": 1,
+      "alpha": 0.95
+    },
+    "BSP-EW": {
+      "kind": "bsp_ew",
+      "R": 1,
+      "alpha": 0.95
+    },
+    "NN-DFL": {
+      "kind": "nn_dfl"
+    },
+    "PTO-Mean": {
+      "kind": "lookahead",
+      "time_limit": 20.0,
+      "gap": 0.005,
+      "integer_days": 1,
+      "target": "mean"
+    },
+    "PTO-Q": {
+      "kind": "lookahead",
+      "time_limit": 20.0,
+      "gap": 0.005,
+      "integer_days": 1,
+      "target": "quantile",
+      "param": 0.9
+    },
+    "PTO-Q2": {
+      "kind": "lookahead",
+      "time_limit": 20.0,
+      "gap": 0.005,
+      "integer_days": 1,
+      "target": "quantile2",
+      "param": [
+        0.9,
+        0.8
+      ]
+    },
+    "Robust": {
+      "kind": "lookahead",
+      "time_limit": 20.0,
+      "gap": 0.005,
+      "integer_days": 1,
+      "target": "robust",
+      "param": 0.5
+    },
+    "DFL": {
+      "kind": "lookahead",
+      "time_limit": 20.0,
+      "gap": 0.005,
+      "integer_days": 1,
+      "target": "dfl"
+    },
+    "PI": {
+      "kind": "lookahead",
+      "time_limit": 20.0,
+      "gap": 0.005,
+      "integer_days": 1,
+      "target": "pi"
+    },
+    "UL": {
+      "kind": "ul",
+      "lam": 1,
+      "alpha": 0.96,
+      "beta": 0.85
+    },
+    "UL-DFL": {
+      "kind": "ul_dfl"
+    },
+    "ScenPO-SS": {
+      "kind": "lookahead",
+      "target": "scenario",
+      "sampler": "jia",
+      "n_scen": 20,
+      "time_limit": 60.0,
+      "gap": 0.005,
+      "integer_days": 1
+    },
+    "UL-coarse": {
+      "kind": "ul",
+      "lam": 1,
+      "alpha": 0.95,
+      "beta": 0.9
+    },
+    "UL-DFL-coarse": {
+      "kind": "ul_dfl"
+    },
+    "ScenPO-SS-bands": {
+      "kind": "lookahead",
+      "target": "scenario",
+      "n_scen": 10,
+      "time_limit": 60.0,
+      "gap": 0.005,
+      "integer_days": 1
+    },
+    "UL-DFL@s0": {
+      "kind": "ul_dfl"
+    },
+    "UL-DFL@s1": {
+      "kind": "ul_dfl"
+    },
+    "UL-DFL@s2": {
+      "kind": "ul_dfl"
+    },
+    "NN-DFL@s0": {
+      "kind": "nn_dfl"
+    },
+    "NN-DFL@s1": {
+      "kind": "nn_dfl"
+    },
+    "NN-DFL@s2": {
+      "kind": "nn_dfl"
+    }
+  },
+  "note": "fresh test episodes; policies tuned and trained in results/base, nothing re-tuned here"
+}

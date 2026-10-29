@@ -34,7 +34,7 @@ def make_policy(spec: dict, inst: Instance, router: SubsetRouting):
         return LookaheadPolicy(inst, router, spec["target"], param=spec.get("param", 0.0),
                                n_scen=spec.get("n_scen", 1), time_limit=spec.get("time_limit", 20.0),
                                gap=spec.get("gap", 0.005), dfl_model=dfl,
-                               integer_days=spec.get("integer_days"))
+                               integer_days=spec.get("integer_days"), sampler=spec.get("sampler", "bands"))
     raise ValueError(kind)
 
 

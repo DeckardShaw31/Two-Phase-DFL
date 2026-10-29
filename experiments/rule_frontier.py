@@ -70,7 +70,9 @@ def main():
     f_ul, w_ul, c_ul = ul.fill_rate.mean(), ul.waste_rate.mean(), ul.cost_total.mean()
     # check: the tuned rule is reproduced exactly
     tuned = old[old.policy == "UL"].cost_total.mean()
-    mine = df[(df.family == "UL") & (df.lam == 1) & (df.alpha == 0.95) & (df.beta == 0.9)].cost
+    ul_spec = json.load(open(os.path.join(run, "manifest.json")))["chosen"]["UL"]
+    mine = df[(df.family == "UL") & (df.lam == ul_spec["lam"]) & np.isclose(df.alpha, ul_spec["alpha"])
+              & np.isclose(df.beta, ul_spec["beta"])].cost
     dom = df[(df.fill >= f_ul) & (df.waste_rate <= w_ul)]
     at_fill = df[df.fill >= f_ul]
     best = df.loc[df.cost.idxmin()]

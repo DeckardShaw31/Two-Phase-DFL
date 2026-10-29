@@ -96,6 +96,37 @@ def evaluate(specs: dict, inst, D, split, key, workers):
     return pd.DataFrame(rows)
 
 
+def summarise(test: pd.DataFrame, order: list, out: str):
+    """Paired tests (Holm within each prespecified family) and the test summary of a finished run."""
+    piv = test.pivot(index="episode", columns="policy", values="cost_total")
+    tests = []
+    for prop, primary in (("DFL", PRIMARY), ("UL-DFL", PRIMARY_UL)):
+        if prop not in piv:
+            continue
+        fam = []
+        for other in order:
+            if other == prop or "@s" in other:
+                continue
+            r = paired_test(piv[prop].values, piv[other].values)
+            fam.append({"comparison": f"{prop} - {other}", "primary": other in primary, **r})
+        fdf = pd.DataFrame(fam)
+        prim = fdf["primary"]
+        fdf.loc[prim, "p_holm_t"] = holm(fdf.loc[prim, "p_t"].tolist())
+        fdf.loc[prim, "p_holm_wilcoxon"] = holm(fdf.loc[prim, "p_wilcoxon"].tolist())
+        tests.append(fdf)
+    tdf = pd.concat(tests, ignore_index=True)
+    tdf.to_csv(os.path.join(out, "paired_tests.csv"), index=False)
+    summ = test.groupby("policy").agg(
+        cost=("cost_total", "mean"), cost_sd=("cost_total", "std"), route=("cost_route", "mean"),
+        hold=("cost_hold", "mean"), waste=("cost_waste", "mean"), lost=("cost_lost", "mean"),
+        fill=("fill_rate", "mean"), waste_rate=("waste_rate", "mean"), routes=("routes", "mean"),
+        visits=("visits", "mean"), delivered=("delivered", "mean"), carried=("carried_mean", "mean"),
+        solver_secs=("solver_secs", "mean"), max_gap=("max_gap", "max"), fallbacks=("n_fallback", "sum"),
+        nonoptimal=("n_nonoptimal", "sum")).reindex(order)
+    summ.to_csv(os.path.join(out, "test_summary.csv"))
+    return summ, tdf
+
+
 def _collect(args):
     spec, inst, demand, fc, start, n_days, seed = args
     router = SubsetRouting(inst.dist, inst.n_vehicles, inst.vehicle_cap)
@@ -254,32 +285,7 @@ def main():
     else:
         test = evaluate({k: chosen[k] for k in order}, inst, D, "test", key, a.workers)
     test.to_csv(test_path, index=False)
-    piv = test.pivot(index="episode", columns="policy", values="cost_total")
-    tests = []
-    for prop, primary in (("DFL", PRIMARY), ("UL-DFL", PRIMARY_UL)):
-        if prop not in piv:
-            continue
-        fam = []
-        for other in order:
-            if other == prop or "@s" in other:
-                continue
-            r = paired_test(piv[prop].values, piv[other].values)
-            fam.append({"comparison": f"{prop} - {other}", "primary": other in primary, **r})
-        fdf = pd.DataFrame(fam)
-        prim = fdf["primary"]
-        fdf.loc[prim, "p_holm_t"] = holm(fdf.loc[prim, "p_t"].tolist())
-        fdf.loc[prim, "p_holm_wilcoxon"] = holm(fdf.loc[prim, "p_wilcoxon"].tolist())
-        tests.append(fdf)
-    tdf = pd.concat(tests, ignore_index=True)
-    tdf.to_csv(os.path.join(a.out, "paired_tests.csv"), index=False)
-    summ = test.groupby("policy").agg(
-        cost=("cost_total", "mean"), cost_sd=("cost_total", "std"), route=("cost_route", "mean"),
-        hold=("cost_hold", "mean"), waste=("cost_waste", "mean"), lost=("cost_lost", "mean"),
-        fill=("fill_rate", "mean"), waste_rate=("waste_rate", "mean"), routes=("routes", "mean"),
-        visits=("visits", "mean"), delivered=("delivered", "mean"), carried=("carried_mean", "mean"),
-        solver_secs=("solver_secs", "mean"), max_gap=("max_gap", "max"), fallbacks=("n_fallback", "sum"),
-        nonoptimal=("n_nonoptimal", "sum")).reindex(order)
-    summ.to_csv(os.path.join(a.out, "test_summary.csv"))
+    summ, tdf = summarise(test, order, a.out)
     log("\n" + summ.round(3).to_string(), fh)
     log("\n" + tdf.round(4).to_string(), fh)
     manifest = {
