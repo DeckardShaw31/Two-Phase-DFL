@@ -1,6 +1,6 @@
 """Tables (LaTeX) and figures for the revised manuscript from the results folders.
 
-python -m experiments.make_figures --results results --out revision_1/figures
+python -m experiments.make_figures --results results_v2 --out revision_1/figures
 """
 
 from __future__ import annotations
@@ -17,9 +17,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-ORDER = ["BSP", "BSP-EW", "UL", "UL-DFL", "NN-DFL", "PTO-Mean", "PTO-Q", "PTO-Q2", "Robust", "ScenPO-SS", "DFL", "PI"]
+ORDER = ["BSP", "BSP-EW", "UL", "UL-DFL", "NN-DFL", "NB-DFL", "PTO-Mean", "PTO-Q", "PTO-Q2", "Robust", "ScenPO-SS", "DFL",
+         "PI"]
 LABEL = {"BSP": "BSP", "BSP-EW": "BSP-EW", "UL": r"UL$_\lambda$", "UL-DFL": "UL-DFL", "NN-DFL": "NN-DFL",
-         "PTO-Mean": "LA-Mean",
+         "NB-DFL": "NB-DFL", "PTO-Mean": "LA-Mean",
          "PTO-Q": "LA-Quantile", "PTO-Q2": "LA-Quantile2", "Robust": "LA-Robust", "ScenPO-SS": "ScenPO-SS",
          "DFL": "LA-DFL", "PI": "PI (reference)"}
 TEX = {"BSP": "BSP", "BSP-EW": "BSP-EW", "UL": r"UL$_\lambda$", "UL-DFL": "UL-DFL", "NN-DFL": "NN-DFL", "NB-DFL": "NB-DFL",
@@ -278,7 +279,10 @@ def fig_dfl_training(R: dict, out: str) -> None:
 
 
 def table_seeds(results: str, out: str, configs: list[str]) -> None:
-    """Test cost of each training seed relative to the policy the method starts from."""
+    """Test cost of each training seed relative to the policy the method starts from.
+
+    Mean of the episode-level relative differences, as mean_rel_diff in the paired tests.
+    """
     rows = []
     for c in configs:
         R = load(results, c)
@@ -289,8 +293,8 @@ def table_seeds(results: str, out: str, configs: list[str]) -> None:
             seeds = sorted(k for k in piv.columns if k.startswith(prop + "@s"))
             if not seeds or prop not in piv:
                 continue
-            rel = [100 * (piv[k].mean() / piv[ref].mean() - 1) for k in seeds]
-            sel = 100 * (piv[prop].mean() / piv[ref].mean() - 1)
+            rel = [100 * ((piv[k] - piv[ref]) / piv[ref]).mean() for k in seeds]
+            sel = 100 * ((piv[prop] - piv[ref]) / piv[ref]).mean()
             cells = [f"{v:+.2f}" for v in rel] + ["--"] * (3 - len(rel))
             rows.append(f"{CONFIG_LABEL[c]} & {TEX[prop]} vs {TEX[ref]} & {sel:+.2f} & " + " & ".join(cells) + r" \\")
     if rows:

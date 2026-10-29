@@ -2,7 +2,7 @@
 \section{Replenishment policies}\label{sec:policies}
 % ============================================================================
 
-All policies receive the same information each day: the observed age-structured stock $B_t$ and the same contextual forecasts. They differ only in how the forecasts and the stock are turned into deliveries and routes. Table~\ref{tab:policies} summarises the twelve policies; parameters marked as tuned are selected on validation episodes only. Decision-focused learning is applied at two levels: on top of the deliver-up-to-level rule (UL-DFL, Section~\ref{sec:uldfl}), where it learns the order-up-to level, and on top of the deterministic lookahead (LA-DFL, Section~\ref{sec:dfl}), where it learns the planning targets.
+All policies receive the same information each day: the observed age-structured stock $B_t$ and the same contextual forecasts. They differ only in how the forecasts and the stock are turned into deliveries and routes. Table~\ref{tab:policies} summarises the twelve policies and NB-DFL, a second ablation of UL-DFL (Section~\ref{sec:uldfl}); parameters marked as tuned are selected on validation episodes only. Decision-focused learning is applied at two levels: on top of the deliver-up-to-level rule (UL-DFL, Section~\ref{sec:uldfl}), where it learns the order-up-to level, and on top of the deterministic lookahead (LA-DFL, Section~\ref{sec:dfl}), where it learns the planning targets.
 
 \subsection{Shared forecasts}\label{sec:forecasts}
 
@@ -58,6 +58,7 @@ BSP-EW & Inventory rule, route second & Base-stock plus estimated waste \citep{b
 UL$_\lambda$ & Stochastic PIRP rule & Deliver-up-to-level \citep{crama2018stochastic} & $\lambda$, $\alpha$, $\beta$ \\
 UL-DFL & Stochastic PIRP rule & Deliver-up-to-level with decision-focused order-up-to level (this paper) & Network weights, early stopping, seed \\
 NN-DFL & Neural ordering policy (ablation) & Delivery output by a network trained like UL-DFL \citep{alvo2023neural} & Network weights, early stopping, seed \\
+NB-DFL & Neural base-stock policy (ablation) & Order-up-to level output by a network trained like UL-DFL & Network weights, early stopping, seed \\
 LA-Mean & Rolling-horizon PIRP & Mean forecasts & -- \\
 LA-Quantile & Rolling-horizon PIRP (CFA) & Quantile forecasts & $\alpha$ \\
 LA-Quantile2 & Rolling-horizon PIRP (CFA) & Day-specific quantile forecasts & $\alpha_0$, $\alpha_1$ \\
@@ -103,4 +104,4 @@ whose last factor is the marginal value of a delivery bounded in Proposition~\re
 \end{algorithmic}
 \end{algorithm}
 
-The two learners differ in what the gradient sees. LA-DFL learns from the $H$-day cost of one plan with the visit pattern chosen by the MILP, so it can only correct the plan's targets; UL-DFL learns from the cost of whole episodes, so it can trade today's order against tomorrow's carried stock and waste, but it keeps the rule's simple visit trigger. LA-DFL needs an MILP solve per training state and epoch; UL-DFL needs none. Compared with the decision-focused learner of the original submission, three changes are essential. The learner no longer differentiates a heuristic surrogate of a MILP that was in practice never solved; the MILP is solved to a proven gap and only supplies visit patterns. The loss is the realised physical cost rather than regret against a heuristic full-information plan. And training and model selection are performed on the closed-loop system that is evaluated.
+The two learners differ in what the gradient sees. LA-DFL learns from the $H$-day cost of one plan with the visit pattern chosen by the MILP, so it can only correct the plan's targets; UL-DFL learns from the cost of whole episodes, so it can trade today's order against tomorrow's carried stock and waste, but it keeps the rule's simple visit trigger. LA-DFL needs an MILP solve per training state and epoch; UL-DFL needs none. Three design choices of LA-DFL matter. The learner does not differentiate a heuristic surrogate of the MILP; the MILP is solved to a proven gap and only supplies visit patterns. The loss is the realised physical cost rather than regret against a full-information plan. And training and model selection are performed on the closed-loop system that is evaluated.

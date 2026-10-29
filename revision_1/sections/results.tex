@@ -27,7 +27,7 @@ A longer lookahead does not change this ranking. With horizons of $H=4$ and $H=5
 
 \begin{table}[H]
 \centering\footnotesize
-\caption{Paired episode-level comparisons of UL-DFL with every other policy (base case, fresh test episodes, 100 episodes). Negative differences favour UL-DFL. Holm adjustment over the five prespecified primary comparisons of UL-DFL.}\label{tab:testsul}
+\caption{Paired episode-level comparisons of UL-DFL with every other policy (base case, fresh test episodes, 100 episodes). Negative differences favour UL-DFL. Rel.: mean of the episode-level relative differences, in percent of the comparator's cost. Holm adjustment over the five prespecified primary comparisons of UL-DFL.}\label{tab:testsul}
 \setlength{\tabcolsep}{4pt}
 \resizebox{\textwidth}{!}{\input{figures/tab_tests_uldfl.tex}}
 \end{table}
@@ -36,7 +36,7 @@ UL-DFL is the cheapest implementable policy (Table~\ref{tab:testsul}). It costs 
 
 \begin{table}[H]
 \centering\footnotesize
-\caption{Paired episode-level comparisons of LA-DFL with every other policy (base case, fresh test episodes, 100 episodes). Negative differences favour LA-DFL. Holm adjustment over the five prespecified primary comparisons of LA-DFL.}\label{tab:tests}
+\caption{Paired episode-level comparisons of LA-DFL with every other policy (base case, fresh test episodes, 100 episodes). Negative differences favour LA-DFL. Rel.: as in Table~\ref{tab:testsul}. Holm adjustment over the five prespecified primary comparisons of LA-DFL.}\label{tab:tests}
 \setlength{\tabcolsep}{4pt}
 \resizebox{\textwidth}{!}{\input{figures/tab_tests.tex}}
 \end{table}
@@ -61,7 +61,7 @@ Table~\ref{tab:corrections} reports the corrections of LA-DFL on the decision st
 \resizebox{0.85\textwidth}{!}{\input{figures/tab_dfl_corrections.tex}}
 \end{table}
 
-For both learners the closed-loop validation cost improved during the first three to six epochs and deteriorated afterwards (Figure~\ref{fig:dfltraining}), which is why model selection on closed-loop validation cost is part of the method. The result does not depend on a lucky seed (Table~\ref{tab:seeds}): on the fresh base-case test episodes the three UL-DFL networks are 0.93--1.00\% cheaper than UL$_\lambda$, and on the earlier test episodes the three LA-DFL networks are 3.5--4.7\% cheaper than LA-Quantile.
+For both learners the closed-loop validation cost improved during the first three to six epochs and deteriorated afterwards (Figure~\ref{fig:dfltraining}), which is why model selection on closed-loop validation cost is part of the method. The result does not depend on a lucky seed (Table~\ref{tab:seeds}): on the fresh base-case test episodes the three UL-DFL networks are 0.98--1.05\% cheaper than UL$_\lambda$, and on the earlier test episodes the three LA-DFL networks are 3.6--4.9\% cheaper than LA-Quantile.
 
 \begin{figure}[H]
 \centering
@@ -71,7 +71,7 @@ For both learners the closed-loop validation cost improved during the first thre
 
 \begin{table}[H]
 \centering\footnotesize
-\caption{Test-cost difference (\%) of each trained network relative to the policy it starts from, by seed; ``selected'' is the network chosen on validation cost. ``Base (fresh test)'': fresh test episodes; all other rows: earlier test episodes.}\label{tab:seeds}
+\caption{Test-cost difference (\%, mean of the episode-level relative differences) of each trained network relative to the policy it starts from, by seed; ``selected'' is the network chosen on validation cost. ``Base (fresh test)'': fresh test episodes; all other rows: earlier test episodes.}\label{tab:seeds}
 \input{figures/tab_seeds.tex}
 \end{table}
 
@@ -79,7 +79,7 @@ For both learners the closed-loop validation cost improved during the first thre
 
 A natural objection is that UL-DFL merely finds better values of the rule's parameters. For the first version of this study the objection was partly right: UL$_\lambda$ had been tuned on a coarse grid, and about half of the advantage of UL-DFL over it disappeared once the rule was tuned on a fine grid (Appendix~\ref{app:variants}). We therefore tune the rule on the fine grid and train UL-DFL from it. Figure~\ref{fig:frontier} places UL-DFL in the waste--service plane together with 124 parameterisations of the rules, all evaluated on the earlier base-case test episodes: UL$_\lambda$ with $\lambda=1$, ten service levels $\alpha$ between 0.85 and 0.99 and eight trigger levels $\beta$ between 0.5 and 0.99, UL$_\lambda$ with $\lambda\in\{2,3\}$, and daily BSP and BSP-EW at the same ten service levels. No parameterisation serves at least UL-DFL's fill rate (96.3\%) with no more waste: at that fill rate the least waste any rule achieves is 2.49\% of the delivered units, against 2.09\% for UL-DFL. The learned corrections move the policy beyond the waste--service frontier of the rules, which no choice of a single service level and trigger can do.
 
-The comparison in total cost favours the rules, because the cheapest of the 124 rules is selected on the test episodes themselves, an advantage UL-DFL does not have. This rule, UL$_\lambda$ with $\alpha=0.96$ and $\beta=0.8$, costs 10,715 per episode; UL-DFL is still 0.6\% cheaper (95\% CI $[-113, -17]$) and wastes 25\% less (2.09\% vs.\ 2.80\% of the delivered units). The real-data case gives a different picture: there the rule selected on validation episodes ($\alpha=0.96$, $\beta=0.85$) is also the cheapest rule in hindsight, and five parameterisations serve at least UL-DFL's fill rate with no more waste. On these data the learned corrections do not move the policy beyond the frontier of the rules (Section~\ref{sec:realresults}).
+The comparison in total cost favours the rules, because the cheapest of the 124 rules is selected on the test episodes themselves, an advantage UL-DFL does not have. This rule, UL$_\lambda$ with $\alpha=0.96$ and $\beta=0.8$, costs 10,715 per episode; UL-DFL is still 0.6\% cheaper (95\% CI $[-113, -17]$) and wastes 25\% less (2.09\% vs.\ 2.80\% of the delivered units). On the fresh test episodes, on which all 124 rules were run in the same way, the result is the same: no parameterisation serves at least UL-DFL's fill rate (96.3\%) with no more waste (the least waste at that fill rate is 2.60\% of the delivered units, against 1.89\% for UL-DFL), and UL-DFL is 1.0\% cheaper than the best rule in hindsight, again $\alpha=0.96$ and $\beta=0.8$ (95\% CI $[-150, -46]$). The real-data case gives a different picture: there the rule selected on validation episodes ($\alpha=0.96$, $\beta=0.85$) is also the cheapest rule in hindsight, and five parameterisations serve at least UL-DFL's fill rate with no more waste. On these data the learned corrections do not move the policy beyond the frontier of the rules (Section~\ref{sec:realresults}).
 
 \begin{figure}[H]
 \centering
@@ -130,7 +130,7 @@ The failure of UL-DFL is one of transfer, not of training. On the validation epi
 
 \subsection{Store-level service}\label{sec:stores}
 
-Average fill rates hide how service is distributed over the network (Figure~\ref{fig:stores}). In all three layouts the inventory rules, with or without learning, serve every store at least 95.4\%. Their orders do not depend on where a store is located, and neither does their service. The deterministic lookahead policies (LA-Quantile, LA-Quantile2, LA-Robust, LA-DFL) do not serve the stores alike: their worst-served store reaches only 89.1--90.3\% in the base layout (fresh test episodes) and 89.6--94.5\% in the clustered and mixed layouts. What matters is not the distance from the depot but the travel a visit adds relative to what the store sells. We measure it by the detour of inserting the store into a tour through all stores, divided by its mean daily demand. In the base and mixed layouts one store stands out on this measure (1.3 distance units per unit of demand, against at most 0.8 for every other store), and in both layouts it is the worst-served store of every deterministic lookahead policy (89.1--93.6\%), whereas the rules, with or without learning, serve it at 95.8--96.8\%. Consolidating deliveries saves the most travel at such a store, and the plan then accepts shortages there. In the clustered layout, where every detour is short (at most 0.3), the shortfall of the lookahead policies is smaller (worst store 92.3--94.5\%). With ten stores per layout this is an observation about individual stores rather than an estimated relationship. ScenPO-SS serves every store less well (worst store 90.9--91.9\% across the layouts), but its shortfall is not concentrated at the expensive store (92.0--92.9\% there). This effect is relevant for retailers with service-level agreements per store: an integrated plan may concentrate stock-outs at individual stores even when its average fill rate is high.
+Average fill rates hide how service is distributed over the network (Figure~\ref{fig:stores}). In all three layouts the inventory rules, with or without learning, serve every store at least 95.4\%. Their orders do not depend on where a store is located, and neither does their service. The deterministic lookahead policies (LA-Quantile, LA-Quantile2, LA-Robust, LA-DFL) do not serve the stores alike: their worst-served store reaches only 89.1--90.3\% in the base layout (fresh test episodes) and 89.6--94.5\% in the clustered and mixed layouts. What matters is not the distance from the depot but the travel a visit adds relative to what the store sells. We measure it by the detour of inserting the store into a tour through all stores, divided by its mean daily demand. In the base and mixed layouts one store stands out on this measure (1.3 distance units per unit of demand, against at most 0.8 for every other store), and in both layouts it is the worst-served store of every deterministic lookahead policy (89.1--93.6\%), whereas the rules, with or without learning, serve it at 96.1--96.8\%. Consolidating deliveries saves the most travel at such a store, and the plan then accepts shortages there. In the clustered layout, where every detour is short (at most 0.3), the shortfall of the lookahead policies is smaller (worst store 92.3--94.5\%). With ten stores per layout this is an observation about individual stores rather than an estimated relationship. ScenPO-SS serves every store less well (worst store 90.9--91.9\% across the layouts), but its shortfall is not concentrated at the expensive store (92.0--92.9\% there). This effect is relevant for retailers with service-level agreements per store: an integrated plan may concentrate stock-outs at individual stores even when its average fill rate is high.
 
 \begin{figure}[H]
 \centering

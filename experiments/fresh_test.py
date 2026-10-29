@@ -13,7 +13,7 @@ Policies (names as in the manuscript):
                   ScenPO-SS-bands is the first implementation (10 scenarios, band sampling)
   all others      as tuned and trained in run_config.py
 
-Writes results/base_fresh/{test_episodes,test_summary,paired_tests}.csv and manifest.json.
+Writes <results>/base_fresh/{test_episodes,test_summary,paired_tests}.csv and manifest.json.
 
 python -m experiments.fresh_test --results results_v2 --workers 12
 """
@@ -110,7 +110,7 @@ def main():
     log("\n" + summ[["cost", "fill", "waste_rate", "visits", "max_gap", "fallbacks", "nonoptimal"]].round(4).to_string())
     manifest = {"config": "base", "episode_seeds": {"test": f"{SEED_OFFSET}+e"}, "n_test": a.n,
                 "chosen": {k: {kk: vv for kk, vv in v.items() if kk != "dfl_state"} for k, v in specs.items()},
-                "note": "fresh test episodes; policies tuned and trained in results/base, nothing re-tuned here"}
+                "note": f"fresh test episodes; policies tuned and trained in {a.results}/base, nothing re-tuned here"}
     with open(os.path.join(out, "manifest.json"), "w") as fh:
         json.dump(manifest, fh, indent=2, default=lambda o: o.tolist() if isinstance(o, np.ndarray) else str(o))
 

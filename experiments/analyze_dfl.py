@@ -4,7 +4,7 @@ For the decision states visited by LA-DFL on the test episodes, the script recor
 correction delta (in forecast-scale units) and the implied quantile level of each planning target,
 and summarises them by lookahead offset, promotion status and the age of the store's stock.
 
-python -m experiments.analyze_dfl --run results/base --out revision_1/figures
+python -m experiments.analyze_dfl --run results_v2/base --out revision_1/figures
 """
 
 from __future__ import annotations
@@ -40,7 +40,7 @@ def implied_level(qs_row: np.ndarray, value: float) -> float:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--run", default="results/base")
+    ap.add_argument("--run", default="results_v2/base")
     ap.add_argument("--out", default="revision_1/figures")
     ap.add_argument("--episodes", type=int, default=20)
     ap.add_argument("--workers", type=int, default=15)

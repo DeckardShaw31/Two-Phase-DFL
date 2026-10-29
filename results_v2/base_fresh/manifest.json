@@ -140,5 +140,5 @@
       "net_waste": false
     }
   },
-  "note": "fresh test episodes; policies tuned and trained in results/base, nothing re-tuned here"
+  "note": "fresh test episodes; policies tuned and trained in results_v2/base, nothing re-tuned here"
 }

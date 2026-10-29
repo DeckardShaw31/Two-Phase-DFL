@@ -5,9 +5,11 @@ quantile grid, is run on the test episodes of a finished configuration. The scri
 (i) the waste/fill-rate frontier the rules can reach, (ii) whether any parameterisation serves at
 least UL-DFL's fill rate with no more waste, and (iii) the best rule in hindsight, i.e. tuned on
 the test episodes themselves, compared with UL-DFL episode by episode. (iii) favours the rules:
-UL-DFL is selected on validation episodes only.
+UL-DFL is selected on validation episodes only. With --fresh the rules are run on the fresh
+base-case test episodes of fresh_test.py and compared with results_v2/base_fresh.
 
 python -m experiments.rule_frontier --config base --results results_v2 --out revision_1/figures
+python -m experiments.rule_frontier --config base --fresh --results results_v2
 """
 
 from __future__ import annotations
@@ -47,10 +49,17 @@ def main():
     ap.add_argument("--results", default="results_v2")
     ap.add_argument("--out", default="revision_1/figures")
     ap.add_argument("--workers", type=int, default=3)
+    ap.add_argument("--fresh", action="store_true", help="fresh base-case test episodes (results_v2/base_fresh)")
+    ap.add_argument("--cache", default="results/cache")
     a = ap.parse_args()
-    run = os.path.join(a.results, a.config)
+    run = os.path.join(a.results, "base_fresh" if a.fresh else a.config)
     cfg = CONFIGS[a.config]
-    D = prepare(cfg)
+    D = prepare(cfg, a.cache)
+    if a.fresh:
+        from experiments.fresh_test import fresh_data
+        n = json.load(open(os.path.join(run, "manifest.json")))["n_test"]
+        F = fresh_data(cfg, D, n, a.cache)
+        D = D | {"episodes": {"test": F["episodes"]}, "forecasts": {"test": F["forecasts"]}}
     inst = make_instance(cfg, D["mean_store"])
     key = f"{cfg.name}-{inst.vehicle_cap}"
     specs = {json.dumps(s): s for s in GRID}
@@ -78,7 +87,7 @@ def main():
     best = df.loc[df.cost.idxmin()]
     best_ep = ep[ep.policy == best.spec].sort_values("episode")
     t = paired_test(ul.cost_total.values, best_ep.cost_total.values)
-    summary = {"config": a.config, "n_rules": len(df), "tuned_UL_check": [float(tuned), float(mine.iloc[0])],
+    summary = {"config": os.path.basename(run), "n_rules": len(df), "tuned_UL_check": [float(tuned), float(mine.iloc[0])],
                "uldfl_fill": f_ul, "uldfl_waste_rate": w_ul, "uldfl_cost": c_ul,
                "n_dominating": len(dom), "min_waste_at_uldfl_fill": float(at_fill.waste_rate.min()) if len(at_fill) else None,
                "best_rule": best.spec, "best_rule_cost": float(best.cost), "best_rule_fill": float(best.fill),
@@ -87,7 +96,7 @@ def main():
     with open(os.path.join(run, "rule_frontier_summary.json"), "w") as fh:
         json.dump(summary, fh, indent=2, default=float)
     print(json.dumps(summary, indent=2, default=float))
-    if a.config == "base":
+    if a.config == "base" and not a.fresh:
         fig_frontier(df, old, a.out)
 
 
