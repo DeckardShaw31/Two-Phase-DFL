@@ -1,0 +1,72 @@
+family,spec,val_cost
+BSP,"{""kind"": ""bsp"", ""R"": 1, ""alpha"": 0.8}",14178.41404532988
+BSP,"{""kind"": ""bsp"", ""R"": 1, ""alpha"": 0.9}",12903.18064704902
+BSP,"{""kind"": ""bsp"", ""R"": 1, ""alpha"": 0.95}",12969.379215487908
+BSP,"{""kind"": ""bsp"", ""R"": 1, ""alpha"": 0.975}",13471.053617798923
+BSP,"{""kind"": ""bsp"", ""R"": 1, ""alpha"": 0.99}",14268.54074242706
+BSP,"{""kind"": ""bsp"", ""R"": 2, ""alpha"": 0.8}",20719.93827149525
+BSP,"{""kind"": ""bsp"", ""R"": 2, ""alpha"": 0.9}",21066.589558879412
+BSP,"{""kind"": ""bsp"", ""R"": 2, ""alpha"": 0.95}",21386.096669063525
+BSP,"{""kind"": ""bsp"", ""R"": 2, ""alpha"": 0.975}",21617.645869545886
+BSP,"{""kind"": ""bsp"", ""R"": 2, ""alpha"": 0.99}",21797.655796055536
+BSP-EW,"{""kind"": ""bsp_ew"", ""R"": 1, ""alpha"": 0.8}",14148.468025035683
+BSP-EW,"{""kind"": ""bsp_ew"", ""R"": 1, ""alpha"": 0.9}",12953.5296975755
+BSP-EW,"{""kind"": ""bsp_ew"", ""R"": 1, ""alpha"": 0.95}",13140.638300971019
+BSP-EW,"{""kind"": ""bsp_ew"", ""R"": 1, ""alpha"": 0.975}",13846.204777066014
+BSP-EW,"{""kind"": ""bsp_ew"", ""R"": 1, ""alpha"": 0.99}",15053.714150722506
+BSP-EW,"{""kind"": ""bsp_ew"", ""R"": 2, ""alpha"": 0.8}",20719.93827149525
+BSP-EW,"{""kind"": ""bsp_ew"", ""R"": 2, ""alpha"": 0.9}",21066.589558879412
+BSP-EW,"{""kind"": ""bsp_ew"", ""R"": 2, ""alpha"": 0.95}",21386.096669063525
+BSP-EW,"{""kind"": ""bsp_ew"", ""R"": 2, ""alpha"": 0.975}",21617.645869545886
+BSP-EW,"{""kind"": ""bsp_ew"", ""R"": 2, ""alpha"": 0.99}",21797.655796055536
+UL,"{""kind"": ""ul"", ""lam"": 1, ""alpha"": 0.9, ""beta"": 0.7}",12889.498375110212
+UL,"{""kind"": ""ul"", ""lam"": 1, ""alpha"": 0.9, ""beta"": 0.9}",12940.53578513271
+UL,"{""kind"": ""ul"", ""lam"": 1, ""alpha"": 0.99, ""beta"": 0.9}",14309.653789332111
+UL,"{""kind"": ""ul"", ""lam"": 1, ""alpha"": 0.99, ""beta"": 0.95}",14652.462460218654
+UL,"{""kind"": ""ul"", ""lam"": 2, ""alpha"": 0.9, ""beta"": 0.7}",14760.252585517715
+UL,"{""kind"": ""ul"", ""lam"": 2, ""alpha"": 0.9, ""beta"": 0.9}",14802.721154855724
+UL,"{""kind"": ""ul"", ""lam"": 2, ""alpha"": 0.9, ""beta"": 0.95}",15473.14500747221
+UL,"{""kind"": ""ul"", ""lam"": 2, ""alpha"": 0.95, ""beta"": 0.7}",15108.439361344352
+UL,"{""kind"": ""ul"", ""lam"": 2, ""alpha"": 0.95, ""beta"": 0.9}",14980.322069492684
+UL,"{""kind"": ""ul"", ""lam"": 2, ""alpha"": 0.95, ""beta"": 0.95}",15414.674682049694
+UL,"{""kind"": ""ul"", ""lam"": 2, ""alpha"": 0.975, ""beta"": 0.7}",15286.586145952167
+UL,"{""kind"": ""ul"", ""lam"": 2, ""alpha"": 0.975, ""beta"": 0.9}",15073.79352446398
+UL,"{""kind"": ""ul"", ""lam"": 1, ""alpha"": 0.9, ""beta"": 0.95}",12942.82057476989
+UL,"{""kind"": ""ul"", ""lam"": 2, ""alpha"": 0.975, ""beta"": 0.95}",15454.323605354482
+UL,"{""kind"": ""ul"", ""lam"": 2, ""alpha"": 0.99, ""beta"": 0.7}",15360.668370111007
+UL,"{""kind"": ""ul"", ""lam"": 2, ""alpha"": 0.99, ""beta"": 0.9}",15169.547135935405
+UL,"{""kind"": ""ul"", ""lam"": 2, ""alpha"": 0.99, ""beta"": 0.95}",15458.4645733718
+UL,"{""kind"": ""ul"", ""lam"": 3, ""alpha"": 0.9, ""beta"": 0.7}",14760.252585517715
+UL,"{""kind"": ""ul"", ""lam"": 3, ""alpha"": 0.9, ""beta"": 0.9}",14802.721154855724
+UL,"{""kind"": ""ul"", ""lam"": 3, ""alpha"": 0.9, ""beta"": 0.95}",15473.14500747221
+UL,"{""kind"": ""ul"", ""lam"": 3, ""alpha"": 0.95, ""beta"": 0.7}",15108.439361344352
+UL,"{""kind"": ""ul"", ""lam"": 3, ""alpha"": 0.95, ""beta"": 0.9}",14980.322069492684
+UL,"{""kind"": ""ul"", ""lam"": 3, ""alpha"": 0.95, ""beta"": 0.95}",15414.674682049694
+UL,"{""kind"": ""ul"", ""lam"": 1, ""alpha"": 0.95, ""beta"": 0.7}",13022.668344723237
+UL,"{""kind"": ""ul"", ""lam"": 3, ""alpha"": 0.975, ""beta"": 0.7}",15286.586145952167
+UL,"{""kind"": ""ul"", ""lam"": 3, ""alpha"": 0.975, ""beta"": 0.9}",15073.79352446398
+UL,"{""kind"": ""ul"", ""lam"": 3, ""alpha"": 0.975, ""beta"": 0.95}",15454.323605354482
+UL,"{""kind"": ""ul"", ""lam"": 3, ""alpha"": 0.99, ""beta"": 0.7}",15360.668370111007
+UL,"{""kind"": ""ul"", ""lam"": 3, ""alpha"": 0.99, ""beta"": 0.9}",15169.547135935405
+UL,"{""kind"": ""ul"", ""lam"": 3, ""alpha"": 0.99, ""beta"": 0.95}",15458.4645733718
+UL,"{""kind"": ""ul"", ""lam"": 1, ""alpha"": 0.95, ""beta"": 0.9}",13051.514930685844
+UL,"{""kind"": ""ul"", ""lam"": 1, ""alpha"": 0.95, ""beta"": 0.95}",13126.81575720381
+UL,"{""kind"": ""ul"", ""lam"": 1, ""alpha"": 0.975, ""beta"": 0.7}",13392.050959730861
+UL,"{""kind"": ""ul"", ""lam"": 1, ""alpha"": 0.975, ""beta"": 0.9}",13556.66386922973
+UL,"{""kind"": ""ul"", ""lam"": 1, ""alpha"": 0.975, ""beta"": 0.95}",13710.838486692139
+UL,"{""kind"": ""ul"", ""lam"": 1, ""alpha"": 0.99, ""beta"": 0.7}",13892.645681060845
+PTO-Q,"{""kind"": ""lookahead"", ""time_limit"": 20.0, ""gap"": 0.005, ""integer_days"": 1, ""target"": ""quantile"", ""param"": 0.7}",15914.10001185718
+PTO-Q,"{""kind"": ""lookahead"", ""time_limit"": 20.0, ""gap"": 0.005, ""integer_days"": 1, ""target"": ""quantile"", ""param"": 0.8}",14496.110869032957
+PTO-Q,"{""kind"": ""lookahead"", ""time_limit"": 20.0, ""gap"": 0.005, ""integer_days"": 1, ""target"": ""quantile"", ""param"": 0.9}",15435.818954439117
+PTO-Q,"{""kind"": ""lookahead"", ""time_limit"": 20.0, ""gap"": 0.005, ""integer_days"": 1, ""target"": ""quantile"", ""param"": 0.95}",17506.10126548658
+PTO-Q,"{""kind"": ""lookahead"", ""time_limit"": 20.0, ""gap"": 0.005, ""integer_days"": 1, ""target"": ""quantile"", ""param"": 0.975}",19390.816631875838
+Robust,"{""kind"": ""lookahead"", ""time_limit"": 20.0, ""gap"": 0.005, ""integer_days"": 1, ""target"": ""robust"", ""param"": 0.25}",15520.772555155545
+Robust,"{""kind"": ""lookahead"", ""time_limit"": 20.0, ""gap"": 0.005, ""integer_days"": 1, ""target"": ""robust"", ""param"": 0.5}",14194.835672119134
+Robust,"{""kind"": ""lookahead"", ""time_limit"": 20.0, ""gap"": 0.005, ""integer_days"": 1, ""target"": ""robust"", ""param"": 1.0}",15859.04295900484
+Robust,"{""kind"": ""lookahead"", ""time_limit"": 20.0, ""gap"": 0.005, ""integer_days"": 1, ""target"": ""robust"", ""param"": 1.5}",17559.959342924074
+PTO-Q2,"{""kind"": ""lookahead"", ""time_limit"": 20.0, ""gap"": 0.005, ""integer_days"": 1, ""target"": ""quantile2"", ""param"": [0.9, 0.6]}",14061.601394639856
+PTO-Q2,"{""kind"": ""lookahead"", ""time_limit"": 20.0, ""gap"": 0.005, ""integer_days"": 1, ""target"": ""quantile2"", ""param"": [0.9, 0.7]}",14210.802877178177
+PTO-Q2,"{""kind"": ""lookahead"", ""time_limit"": 20.0, ""gap"": 0.005, ""integer_days"": 1, ""target"": ""quantile2"", ""param"": [0.9, 0.8]}",14518.814053549771
+PTO-Q2,"{""kind"": ""lookahead"", ""time_limit"": 20.0, ""gap"": 0.005, ""integer_days"": 1, ""target"": ""quantile2"", ""param"": [0.95, 0.6]}",15177.053187140215
+PTO-Q2,"{""kind"": ""lookahead"", ""time_limit"": 20.0, ""gap"": 0.005, ""integer_days"": 1, ""target"": ""quantile2"", ""param"": [0.95, 0.7]}",15231.780074070779
+PTO-Q2,"{""kind"": ""lookahead"", ""time_limit"": 20.0, ""gap"": 0.005, ""integer_days"": 1, ""target"": ""quantile2"", ""param"": [0.95, 0.8]}",15603.672630413335

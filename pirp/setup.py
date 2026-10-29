@@ -37,9 +37,10 @@ class Config:
     c_route: float = 1.0
     nb_size: float = 8.0
     lifo_share: float = 0.0
-    n_train: int = 100
-    n_val: int = 20
-    n_test: int = 40
+    n_train: int = 200
+    n_val: int = 50
+    n_test: int = 100
+    demand_source: str = "synthetic"   # or "fresh": FreshRetailNet-50K episodes (pirp/fresh.py)
 
     def demand_params(self) -> DemandParams:
         return DemandParams(n_stores=self.n_stores, nb_size=self.nb_size)
@@ -47,7 +48,9 @@ class Config:
     def demand_key(self) -> str:
         from .forecasting import QUANTILE_LEVELS
         return hashlib.md5(json.dumps([self.n_stores, self.nb_size, self.n_train, self.n_val, self.n_test,
-                                       self.horizon, QUANTILE_LEVELS.tolist()]).encode()).hexdigest()[:10]
+                                       self.horizon, QUANTILE_LEVELS.tolist()]
+                                      + ([self.demand_source] if self.demand_source != "synthetic" else [])
+                                      ).encode()).hexdigest()[:10]
 
 
 def episodes(cfg: Config, split: str) -> list[dict]:
@@ -66,7 +69,12 @@ def prepare(cfg: Config, cache_dir: str = "results/cache") -> dict:
         return joblib.load(path)
     dp = cfg.demand_params()
     bases = store_bases(dp)
-    data = {s: episodes(cfg, s) for s in ("train", "val", "test")}
+    if cfg.demand_source == "fresh":
+        from .fresh import build_episodes
+        raw = os.environ.get("FRESH_DIR", "data/freshretailnet_raw")
+        data = build_episodes(raw, bases, {"train": cfg.n_train, "val": cfg.n_val, "test": cfg.n_test}, HIST)
+    else:
+        data = {s: episodes(cfg, s) for s in ("train", "val", "test")}
     H = cfg.horizon
     X, y = build_dataset(data["train"], bases, start=28, n_days=HIST + EVAL_DAYS + TAIL - 28 - H + 1, horizon=H)
     fc = Forecaster(seed=0).fit(X, y)

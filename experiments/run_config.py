@@ -42,6 +42,10 @@ CONFIGS = {
     "highvar": variant(BASE, name="highvar", nb_size=3.0),
     "route3": variant(BASE, name="route3", c_route=3.0),
     "lifo": variant(BASE, name="lifo", lifo_share=0.3),
+    "net_c1": variant(BASE, name="net_c1", layout="C1"),
+    "net_rc1": variant(BASE, name="net_rc1", layout="RC1"),
+    "fresh": variant(BASE, name="fresh", demand_source="fresh"),
+    "smoke": variant(BASE, name="smoke", n_train=6, n_val=3, n_test=3),
 }
 
 LOOK = dict(kind="lookahead", time_limit=20.0, gap=0.005, integer_days=1)
@@ -52,6 +56,8 @@ GRIDS = {
            for b in (0.7, 0.9, 0.95)],
     "PTO-Q": [dict(LOOK, target="quantile", param=a) for a in (0.7, 0.8, 0.9, 0.95, 0.975)],
     "Robust": [dict(LOOK, target="robust", param=g) for g in (0.25, 0.5, 1.0, 1.5)],
+    # ablation of what LA-DFL learns: one quantile level for the implemented day, one for later days
+    "PTO-Q2": [dict(LOOK, target="quantile2", param=(a0, a1)) for a0 in (0.9, 0.95) for a1 in (0.6, 0.7, 0.8)],
 }
 FIXED = {
     "PTO-Mean": dict(LOOK, target="mean"),
@@ -59,6 +65,7 @@ FIXED = {
     "PI": dict(LOOK, target="pi"),
 }
 PRIMARY = ["PTO-Q", "ScenPO-SS", "Robust", "BSP-EW", "UL"]
+PRIMARY_UL = ["UL", "BSP-EW", "ScenPO-SS", "DFL", "PTO-Q2"]
 
 
 def log(msg: str, fh=None):
@@ -119,7 +126,12 @@ def main():
     ap.add_argument("--workers", type=int, default=15)
     ap.add_argument("--reuse", default=None, help="evaluate the policies tuned/trained in another run")
     ap.add_argument("--dfl-epochs", type=int, default=8)
-    ap.add_argument("--dfl-episodes", type=int, default=60)
+    ap.add_argument("--dfl-episodes", type=int, default=100)
+    ap.add_argument("--dfl-seeds", default="0", help="LA-DFL training seeds; the best on validation is LA-DFL")
+    ap.add_argument("--ul-dfl-seeds", default="0,1,2")
+    ap.add_argument("--ul-dfl-epochs", type=int, default=30)
+    ap.add_argument("--nn-dfl-seeds", default="0,1,2", help="NN-DFL ablation: neural orders without the rule")
+    ap.add_argument("--nn-dfl-epochs", type=int, default=60)
     ap.add_argument("--cache", default="results/cache")
     a = ap.parse_args()
     cfg = CONFIGS[a.config]
@@ -159,38 +171,106 @@ def main():
         chosen.update(FIXED)
         joblib.dump(chosen, pre_dfl)
         # ---------------------------------------------------------------- DFL
-        from pirp.dfl import train_dfl
-        alpha = chosen["PTO-Q"]["param"]
-        samples = collect_samples(chosen["PTO-Q"], inst, D, a.dfl_episodes, a.workers)
-        log(f"DFL: {len(samples)} training decision states, start alpha={alpha}", fh)
+        part = os.path.join(a.out, "chosen_policies.joblib")
+        if os.path.exists(part):  # resume after an interrupted learning stage
+            chosen.update({k: v for k, v in joblib.load(part).items() if k not in chosen})
+        if "DFL" not in chosen:
+            from pirp.dfl import train_dfl
+            alpha = chosen["PTO-Q"]["param"]
+            samples = collect_samples(chosen["PTO-Q"], inst, D, a.dfl_episodes, a.workers)
+            log(f"DFL: {len(samples)} training decision states, start alpha={alpha}", fh)
 
-        def val_fn(state):
-            spec = dict(LOOK, target="dfl", dfl_state=state)
-            df = evaluate({"DFL": spec}, inst, D, "val", key, a.workers)
-            return float(df["cost_total"].mean())
+            def val_fn(state):
+                spec = dict(LOOK, target="dfl", dfl_state=state)
+                df = evaluate({"DFL": spec}, inst, D, "val", key, a.workers)
+                return float(df["cost_total"].mean())
 
-        model, dfl_hist = train_dfl(inst, samples, alpha, D["mean_store"], val_fn, epochs=a.dfl_epochs,
-                                    resolve_every=2, n_workers=a.workers, log=lambda s: log(s, fh),
-                                    integer_days=LOOK["integer_days"])
-        chosen["DFL"] = dict(LOOK, target="dfl", dfl_state=model.state())
-        pd.DataFrame(dfl_hist).to_csv(os.path.join(a.out, "dfl_training.csv"), index=False)
-        joblib.dump(chosen, os.path.join(a.out, "chosen_policies.joblib"))
+            hist_all, best = [], None
+            seeds = [int(x) for x in a.dfl_seeds.split(",")]
+            for sd in seeds:
+                model, hist = train_dfl(inst, samples, alpha, D["mean_store"], val_fn, epochs=a.dfl_epochs,
+                                        resolve_every=2, n_workers=a.workers, log=lambda s: log(s, fh),
+                                        integer_days=LOOK["integer_days"], seed=sd)
+                hist_all += [dict(h, seed=sd) for h in hist]
+                v = min(h["val_cost"] for h in hist)
+                if len(seeds) > 1:
+                    chosen[f"DFL@s{sd}"] = dict(LOOK, target="dfl", dfl_state=model.state())
+                if best is None or v < best[0]:
+                    best = (v, model)
+            chosen["DFL"] = dict(LOOK, target="dfl", dfl_state=best[1].state())
+            pd.DataFrame(hist_all).to_csv(os.path.join(a.out, "dfl_training.csv"), index=False)
+            joblib.dump(chosen, part)
+        if "UL-DFL" not in chosen:
+            from pirp.rule_dfl import train_ul_dfl
+
+            def ul_val_fn(state):
+                df = evaluate({"UL-DFL": dict(kind="ul_dfl", dfl_state=state)}, inst, D, "val", key, a.workers)
+                return float(df["cost_total"].mean())
+
+            hist_all, best = [], None
+            for sd in [int(x) for x in a.ul_dfl_seeds.split(",")]:
+                model, hist = train_ul_dfl(inst, D, chosen["UL"], ul_val_fn, HIST, EVAL_DAYS, epochs=a.ul_dfl_epochs,
+                                           seed=sd, log=lambda s: log(s, fh))
+                hist_all += [dict(h, seed=sd) for h in hist]
+                v = min(h["val_cost"] for h in hist)
+                chosen[f"UL-DFL@s{sd}"] = dict(kind="ul_dfl", dfl_state=model.state())
+                if best is None or v < best[0]:
+                    best = (v, model)
+            chosen["UL-DFL"] = dict(kind="ul_dfl", dfl_state=best[1].state())
+            pd.DataFrame(hist_all).to_csv(os.path.join(a.out, "ul_dfl_training.csv"), index=False)
+            joblib.dump(chosen, part)
+        if "NN-DFL" not in chosen:  # ablation: same learner and inputs, no rule structure
+            from pirp.rule_dfl import train_ul_dfl
+
+            def nn_val_fn(state):
+                df = evaluate({"NN-DFL": dict(kind="nn_dfl", dfl_state=state)}, inst, D, "val", key, a.workers)
+                return float(df["cost_total"].mean())
+
+            hist_all, best = [], None
+            for sd in [int(x) for x in a.nn_dfl_seeds.split(",")]:
+                model, hist = train_ul_dfl(inst, D, chosen["UL"], nn_val_fn, HIST, EVAL_DAYS, epochs=a.nn_dfl_epochs,
+                                           seed=sd, log=lambda s: log(s, fh), kind="nn")
+                hist_all += [dict(h, seed=sd) for h in hist]
+                v = min(h["val_cost"] for h in hist)
+                chosen[f"NN-DFL@s{sd}"] = dict(kind="nn_dfl", dfl_state=model.state())
+                if best is None or v < best[0]:
+                    best = (v, model)
+            chosen["NN-DFL"] = dict(kind="nn_dfl", dfl_state=best[1].state())
+            pd.DataFrame(hist_all).to_csv(os.path.join(a.out, "nn_dfl_training.csv"), index=False)
+            joblib.dump(chosen, part)
 
     # -------------------------------------------------------------------- test
-    order = ["BSP", "BSP-EW", "UL", "PTO-Mean", "PTO-Q", "Robust", "ScenPO-SS", "DFL", "PI"]
-    test = evaluate({k: chosen[k] for k in order}, inst, D, "test", key, a.workers)
-    test.to_csv(os.path.join(a.out, "test_episodes.csv"), index=False)
+    order = [k for k in ["BSP", "BSP-EW", "UL", "UL-DFL", "NN-DFL", "PTO-Mean", "PTO-Q", "PTO-Q2", "Robust",
+                         "ScenPO-SS", "DFL", "PI"] if k in chosen]
+    order += sorted(k for k in chosen if "@s" in k)  # individual training seeds (robustness)
+    test_path = os.path.join(a.out, "test_episodes.csv")
+    old = pd.read_csv(test_path) if os.path.exists(test_path) else None
+    if old is not None and old.groupby("policy").size().eq(len(D["episodes"]["test"])).all():
+        # a finished run extended by new policies: the test episodes of the others are not re-run
+        new = [k for k in order if k not in set(old.policy)]
+        log(f"test: reusing {old.policy.nunique()} evaluated policies, evaluating {new}", fh)
+        test = pd.concat([old] + ([evaluate({k: chosen[k] for k in new}, inst, D, "test", key, a.workers)]
+                                  if new else []), ignore_index=True)
+    else:
+        test = evaluate({k: chosen[k] for k in order}, inst, D, "test", key, a.workers)
+    test.to_csv(test_path, index=False)
     piv = test.pivot(index="episode", columns="policy", values="cost_total")
     tests = []
-    for other in order:
-        if other == "DFL":
+    for prop, primary in (("DFL", PRIMARY), ("UL-DFL", PRIMARY_UL)):
+        if prop not in piv:
             continue
-        r = paired_test(piv["DFL"].values, piv[other].values)
-        tests.append({"comparison": f"DFL - {other}", "primary": other in PRIMARY, **r})
-    tdf = pd.DataFrame(tests)
-    prim = tdf["primary"]
-    tdf.loc[prim, "p_holm_t"] = holm(tdf.loc[prim, "p_t"].tolist())
-    tdf.loc[prim, "p_holm_wilcoxon"] = holm(tdf.loc[prim, "p_wilcoxon"].tolist())
+        fam = []
+        for other in order:
+            if other == prop or "@s" in other:
+                continue
+            r = paired_test(piv[prop].values, piv[other].values)
+            fam.append({"comparison": f"{prop} - {other}", "primary": other in primary, **r})
+        fdf = pd.DataFrame(fam)
+        prim = fdf["primary"]
+        fdf.loc[prim, "p_holm_t"] = holm(fdf.loc[prim, "p_t"].tolist())
+        fdf.loc[prim, "p_holm_wilcoxon"] = holm(fdf.loc[prim, "p_wilcoxon"].tolist())
+        tests.append(fdf)
+    tdf = pd.concat(tests, ignore_index=True)
     tdf.to_csv(os.path.join(a.out, "paired_tests.csv"), index=False)
     summ = test.groupby("policy").agg(
         cost=("cost_total", "mean"), cost_sd=("cost_total", "std"), route=("cost_route", "mean"),

@@ -191,6 +191,10 @@ class LookaheadPolicy:
             return ctx.mu
         if self.target == "quantile":
             return quantile_at(ctx.qs, self.param)
+        if self.target == "quantile2":  # level param[0] on the implemented day, param[1] on later days
+            d = quantile_at(ctx.qs, self.param[1])
+            d[:, 0] = quantile_at(ctx.qs[:, 0], self.param[0])
+            return d
         if self.target == "robust":
             return robust_targets(ctx.mu, ctx.qs, self.param)
         if self.target == "scenario":

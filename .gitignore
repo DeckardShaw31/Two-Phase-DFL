@@ -44,3 +44,7 @@ supplementary_material/
 # OS-generated files
 .DS_Store
 Thumbs.db
+
+# FreshRetailNet-50K raw data (CC BY 4.0, ~115 MB; download from Hugging Face,
+# Dingdong-Inc/FreshRetailNet-50K, into data/freshretailnet_raw/ or set FRESH_DIR)
+data/freshretailnet_raw/*.parquet

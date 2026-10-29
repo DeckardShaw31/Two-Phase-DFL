@@ -59,12 +59,6 @@
       "R": 1,
       "alpha": 0.95
     },
-    "UL": {
-      "kind": "ul",
-      "lam": 1,
-      "alpha": 0.95,
-      "beta": 0.9
-    },
     "PTO-Q": {
       "kind": "lookahead",
       "time_limit": 20.0,
@@ -80,6 +74,12 @@
       "integer_days": 1,
       "target": "robust",
       "param": 1.0
+    },
+    "UL": {
+      "kind": "ul",
+      "lam": 1,
+      "alpha": 0.95,
+      "beta": 0.9
     },
     "PTO-Mean": {
       "kind": "lookahead",
@@ -112,9 +112,9 @@
     }
   },
   "reused_from": null,
-  "python": "3.12.9 (tags/v3.12.9:fdb8142, Feb  4 2025, 15:27:58) [MSC v.1942 64 bit (AMD64)]",
+  "python": "3.13.11 (tags/v3.13.11:6278944, Dec  5 2025, 16:26:58) [MSC v.1944 64 bit (AMD64)]",
   "platform": "Windows-11-10.0.26200-SP0",
-  "numpy": "2.5.4",
-  "pandas": "3.1.0",
-  "runtime_sec": 2108.6277871131897
+  "numpy": "2.2.6",
+  "pandas": "2.3.3",
+  "runtime_sec": 1494.3719489574432
 }

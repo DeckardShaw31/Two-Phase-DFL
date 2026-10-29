@@ -17,15 +17,21 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-ORDER = ["BSP", "BSP-EW", "UL", "PTO-Mean", "PTO-Q", "Robust", "ScenPO-SS", "DFL", "PI"]
-LABEL = {"BSP": "BSP", "BSP-EW": "BSP-EW", "UL": r"UL$_\lambda$", "PTO-Mean": "LA-Mean", "PTO-Q": "LA-Quantile",
-         "Robust": "LA-Robust", "ScenPO-SS": "ScenPO-SS", "DFL": "LA-DFL", "PI": "PI (reference)"}
-TEX = {"BSP": "BSP", "BSP-EW": "BSP-EW", "UL": r"UL$_\lambda$", "PTO-Mean": "LA-Mean", "PTO-Q": "LA-Quantile",
-       "Robust": "LA-Robust", "ScenPO-SS": "ScenPO-SS", "DFL": "LA-DFL", "PI": "PI"}
-CONFIG_LABEL = {"base": "Base", "m2": r"$m=2$", "m4": r"$m=4$", "pu10": r"$p_u=10$", "pu40": r"$p_u=40$",
-                "fleet_tight": r"$\rho=1.10$", "fleet_loose": r"$\rho=1.60$", "highvar": "High var.",
-                "route3": r"$c^{\mathrm{r}}=3$",
-                "lifo": "30\\% LIFO"}
+ORDER = ["BSP", "BSP-EW", "UL", "UL-DFL", "NN-DFL", "PTO-Mean", "PTO-Q", "PTO-Q2", "Robust", "ScenPO-SS", "DFL", "PI"]
+LABEL = {"BSP": "BSP", "BSP-EW": "BSP-EW", "UL": r"UL$_\lambda$", "UL-DFL": "UL-DFL", "NN-DFL": "NN-DFL",
+         "PTO-Mean": "LA-Mean",
+         "PTO-Q": "LA-Quantile", "PTO-Q2": "LA-Quantile2", "Robust": "LA-Robust", "ScenPO-SS": "ScenPO-SS",
+         "DFL": "LA-DFL", "PI": "PI (reference)"}
+TEX = {"BSP": "BSP", "BSP-EW": "BSP-EW", "UL": r"UL$_\lambda$", "UL-DFL": "UL-DFL", "NN-DFL": "NN-DFL",
+       "PTO-Mean": "LA-Mean",
+       "PTO-Q": "LA-Quantile", "PTO-Q2": "LA-Quantile2", "Robust": "LA-Robust", "ScenPO-SS": "ScenPO-SS",
+       "DFL": "LA-DFL", "PI": "PI"}
+CONFIG_LABEL = {"base": "Base", "net_c1": "Clustered", "net_rc1": "Mixed", "m2": r"$m=2$", "m4": r"$m=4$",
+                "pu10": r"$p_u=10$", "pu40": r"$p_u=40$", "fleet_tight": r"$\rho=1.10$",
+                "fleet_loose": r"$\rho=1.60$", "highvar": "High var.", "route3": r"$c^{\mathrm{r}}=3$",
+                "lifo": "30\\% LIFO", "fresh": "Real data"}
+CONFIGS = ["base", "net_c1", "net_rc1", "m2", "m4", "pu10", "pu40", "fleet_tight", "fleet_loose", "highvar", "route3",
+           "lifo", "fresh"]
 GREY = "#6b6b6b"
 COLORS = {"route": "#4c72b0", "hold": "#dd8452", "waste": "#55a868", "lost": "#c44e52"}
 
@@ -67,21 +73,22 @@ Policy & Total cost (SD) & Routing & Holding & Waste & Lost sales & Fill rate (\
     open(os.path.join(out, "tab_base.tex"), "w").write(tex)
 
 
-def table_tests(R: dict, out: str) -> None:
+def table_tests(R: dict, out: str, prop: str = "DFL", fname: str = "tab_tests.tex") -> None:
     t = R["tests"].copy()
+    t = t[t.comparison.str.startswith(f"{prop} - ")]
     rows = []
     for _, r in t.iterrows():
-        other = r.comparison.replace("DFL - ", "")
+        other = r.comparison.replace(f"{prop} - ", "")
         holm_p = fmt_p(r.p_holm_t) if r.primary else "--"
-        rows.append(f"LA-DFL $-$ {TEX.get(other, other)} & {r.mean_diff:,.1f} & [{r.ci_lo:,.1f}, {r.ci_hi:,.1f}] & "
+        rows.append(f"{TEX[prop]} $-$ {TEX.get(other, other)} & {r.mean_diff:,.1f} & [{r.ci_lo:,.1f}, {r.ci_hi:,.1f}] & "
                     f"{100 * r.mean_rel_diff:.1f} & {100 * r.win_rate:.0f} & {fmt_p(r.p_t)} & {fmt_p(r.p_wilcoxon)} & "
                     f"{holm_p} \\\\")
     tex = (r"""\begin{tabular}{lrrrrrrr}
 \toprule
-Comparison & Mean diff. & 95\% bootstrap CI & Rel. (\%) & DFL wins (\%) & $p$ ($t$) & $p$ (Wilcoxon) & Holm $p$ \\
+Comparison & Mean diff. & 95\% bootstrap CI & Rel. (\%) & Wins (\%) & $p$ ($t$) & $p$ (Wilcoxon) & Holm $p$ \\
 \midrule
 """ + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
-    open(os.path.join(out, "tab_tests.tex"), "w").write(tex)
+    open(os.path.join(out, fname), "w").write(tex)
 
 
 def fig_components(R: dict, out: str) -> None:
@@ -110,16 +117,17 @@ def table_sensitivity(results: str, out: str, configs: list[str]) -> pd.DataFram
             continue
         s = R["summ"]
         ref = s.loc["PTO-Q", "cost"]
-        best_nonpi = s.drop(index="PI").cost.idxmin()
+        best_nonpi = s.loc[[k for k in ORDER if k in s.index and k != "PI"]].cost.idxmin()
         t = R["tests"].set_index("comparison")
         for k in ORDER:
             if k in s.index:
                 recs.append({"config": c, "policy": k, "cost": s.loc[k, "cost"], "rel_to_q": s.loc[k, "cost"] / ref - 1,
                              "fill": s.loc[k, "fill"], "waste_rate": s.loc[k, "waste_rate"], "best": k == best_nonpi})
-        for comp in ("PTO-Q", "ScenPO-SS", "BSP-EW", "UL", "Robust"):
-            key = f"DFL - {comp}"
+        for prop, comp in [("DFL", x) for x in ("PTO-Q", "PTO-Q2", "ScenPO-SS", "BSP-EW", "UL", "Robust")] + \
+                [("UL-DFL", x) for x in ("UL", "BSP-EW", "ScenPO-SS", "DFL", "PTO-Q2", "NN-DFL")]:
+            key = f"{prop} - {comp}"
             if key in t.index:
-                recs.append({"config": c, "policy": f"diff:{comp}", "cost": t.loc[key, "mean_diff"],
+                recs.append({"config": c, "policy": f"diff:{key}", "cost": t.loc[key, "mean_diff"],
                              "rel_to_q": t.loc[key, "mean_rel_diff"], "fill": t.loc[key, "ci_lo"],
                              "waste_rate": t.loc[key, "ci_hi"], "best": False})
     df = pd.DataFrame(recs)
@@ -147,7 +155,7 @@ def table_sensitivity(results: str, out: str, configs: list[str]) -> pd.DataFram
         pi.append(f"{r.iloc[0].cost:,.0f}" if not r.empty else "--")
     lines.append(r"\midrule" + "\nPI (reference) & " + " & ".join(pi) + r" \\")
     fill = []
-    for k in ("DFL", "ScenPO-SS", "PTO-Q", "BSP-EW"):
+    for k in ("UL-DFL", "DFL", "ScenPO-SS", "PTO-Q", "BSP-EW"):
         cells = []
         for c in cols:
             r = df[(df.config == c) & (df.policy == k)]
@@ -157,23 +165,25 @@ def table_sensitivity(results: str, out: str, configs: list[str]) -> pd.DataFram
     tex = ("\\begin{tabular}{l" + "r" * len(cols) + "}\n\\toprule\n" + head + "\n\\midrule\n" + "\n".join(lines)
            + "\n\\midrule\n" + "\n".join(fill) + "\n\\bottomrule\n\\end{tabular}\n")
     open(os.path.join(out, "tab_sensitivity.tex"), "w").write(tex)
-    # DFL paired differences across configurations
-    dl = []
-    for comp in ("PTO-Q", "ScenPO-SS", "Robust", "BSP-EW", "UL"):
-        cells = []
-        for c in cols:
-            r = df[(df.config == c) & (df.policy == f"diff:{comp}")]
-            if r.empty:
-                cells.append("--")
-                continue
-            r = r.iloc[0]
-            sig = r.waste_rate < 0 or r.fill > 0
-            txt = f"{100 * r.rel_to_q:+.1f}"
-            cells.append(r"\textbf{" + txt + "}" if sig else txt)
-        dl.append(f"vs {TEX[comp]} & " + " & ".join(cells) + r" \\")
-    tex2 = ("\\begin{tabular}{l" + "r" * len(cols) + "}\n\\toprule\n" + head.replace("Policy", "LA-DFL")
-            + "\n\\midrule\n" + "\n".join(dl) + "\n\\bottomrule\n\\end{tabular}\n")
-    open(os.path.join(out, "tab_dfl_diffs.tex"), "w").write(tex2)
+    # paired differences of the two decision-focused policies across configurations
+    for prop, comps, fname in (("DFL", ("PTO-Q", "PTO-Q2", "ScenPO-SS", "Robust", "BSP-EW", "UL"), "tab_dfl_diffs.tex"),
+                               ("UL-DFL", ("UL", "BSP-EW", "ScenPO-SS", "DFL", "PTO-Q2", "NN-DFL"), "tab_uldfl_diffs.tex")):
+        dl = []
+        for comp in comps:
+            cells = []
+            for c in cols:
+                r = df[(df.config == c) & (df.policy == f"diff:{prop} - {comp}")]
+                if r.empty:
+                    cells.append("--")
+                    continue
+                r = r.iloc[0]
+                sig = r.waste_rate < 0 or r.fill > 0
+                txt = f"{100 * r.rel_to_q:+.1f}"
+                cells.append(r"\textbf{" + txt + "}" if sig else txt)
+            dl.append(f"vs {TEX[comp]} & " + " & ".join(cells) + r" \\")
+        tex2 = ("\\begin{tabular}{l" + "r" * len(cols) + "}\n\\toprule\n" + head.replace("Policy", TEX[prop])
+                + "\n\\midrule\n" + "\n".join(dl) + "\n\\bottomrule\n\\end{tabular}\n")
+        open(os.path.join(out, fname), "w").write(tex2)
     return df
 
 
@@ -181,8 +191,9 @@ def fig_sensitivity(df: pd.DataFrame, out: str, configs: list[str]) -> None:
     if df.empty:
         return
     cols = [c for c in configs if c in set(df.config)]
-    pols = ["BSP-EW", "UL", "PTO-Mean", "Robust", "ScenPO-SS", "DFL"]
-    fig, ax = plt.subplots(figsize=(7.2, 3.3))
+    # LA-Mean (+24% to +119%) is omitted: it would compress all other bars
+    pols = ["BSP-EW", "UL", "UL-DFL", "Robust", "ScenPO-SS", "DFL"]
+    fig, ax = plt.subplots(figsize=(7.2, 3.4))
     x = np.arange(len(cols))
     w = 0.13
     pal = ["#8c8c8c", "#b5b5b5", "#4c72b0", "#dd8452", "#55a868", "#c44e52"]
@@ -192,9 +203,9 @@ def fig_sensitivity(df: pd.DataFrame, out: str, configs: list[str]) -> None:
         ax.bar(x + (j - 2.5) * w, vals, width=w, color=pal[j], label=LABEL[p])
     ax.axhline(0, color="black", lw=0.8)
     ax.set_xticks(x)
-    ax.set_xticklabels([CONFIG_LABEL[c].replace("$", "").replace("\\", "") for c in cols], fontsize=8)
+    ax.set_xticklabels([CONFIG_LABEL[c] for c in cols], fontsize=8, rotation=30, ha="right")
     ax.set_ylabel("Cost relative to LA-Quantile (%)")
-    ax.legend(ncol=6, fontsize=7, frameon=False, loc="upper center", bbox_to_anchor=(0.5, 1.13))
+    ax.legend(ncol=6, fontsize=7, frameon=False, loc="upper center", bbox_to_anchor=(0.5, 1.12))
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
     fig.savefig(os.path.join(out, "fig_sensitivity.pdf"))
@@ -207,8 +218,8 @@ def fig_store_service(R: dict, out: str) -> None:
     coords, dist = build_network(R["man"]["config"]["layout"], R["man"]["config"]["n_stores"])
     d0 = dist[0, 1:]
     fig, ax = plt.subplots(figsize=(5.2, 3.2))
-    for p, mk, col in (("BSP-EW", "s", "#8c8c8c"), ("UL", "^", "#b5b5b5"), ("PTO-Q", "o", "#4c72b0"),
-                       ("ScenPO-SS", "D", "#55a868"), ("DFL", "*", "#c44e52")):
+    for p, mk, col in (("BSP-EW", "s", "#8c8c8c"), ("UL", "^", "#b5b5b5"), ("UL-DFL", "v", "#4c72b0"),
+                       ("PTO-Q", "o", "#dd8452"), ("ScenPO-SS", "D", "#55a868"), ("DFL", "*", "#c44e52")):
         sub = ep[ep.policy == p]
         if sub.empty:
             continue
@@ -225,23 +236,55 @@ def fig_store_service(R: dict, out: str) -> None:
 
 
 def fig_dfl_training(R: dict, out: str) -> None:
-    p = os.path.join(R["dir"], "dfl_training.csv")
-    if not os.path.exists(p):
+    """Validation cost by epoch and training seed: LA-DFL (left) and UL-DFL (right)."""
+    panels = [(f, lab) for f, lab in (("dfl_training.csv", "LA-DFL epoch (0 = tuned LA-Quantile)"),
+                                      ("ul_dfl_training.csv", r"UL-DFL epoch (0 = tuned UL$_\lambda$)"))
+              if os.path.exists(os.path.join(R["dir"], f))]
+    if not panels:
         return
-    h = pd.read_csv(p)
-    fig, ax = plt.subplots(figsize=(4.2, 2.8))
-    ax.plot(h.epoch, h.val_cost, marker="o", color="#c44e52")
-    ax.set_xlabel("DFL epoch (0 = tuned LA-Quantile)")
-    ax.set_ylabel("Validation cost per episode")
-    ax.spines[["top", "right"]].set_visible(False)
+    fig, axes = plt.subplots(1, len(panels), figsize=(3.6 * len(panels), 2.8), squeeze=False)
+    for ax, (f, lab) in zip(axes[0], panels):
+        h = pd.read_csv(os.path.join(R["dir"], f))
+        if "seed" not in h:
+            h["seed"] = 0
+        for j, (sd, g) in enumerate(h.groupby("seed")):
+            ax.plot(g.epoch, g.val_cost, marker="o", ms=3, lw=1, color=["#c44e52", "#4c72b0", "#55a868"][j % 3],
+                    label=f"seed {sd}")
+        ax.set_xlabel(lab)
+        ax.set_ylabel("Validation cost per episode")
+        ax.legend(fontsize=7, frameon=False)
+        ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
     fig.savefig(os.path.join(out, "fig_dfl_training.pdf"))
     plt.close(fig)
 
 
-MACRO = {"BSP": "BSP", "BSP-EW": "BSPEW", "UL": "UL", "PTO-Mean": "LAMean", "PTO-Q": "LAQ", "Robust": "LARob",
-         "ScenPO-SS": "ScenPO", "DFL": "DFL", "PI": "PI"}
-CFG_MACRO = {"base": "Base", "m2": "MTwo", "m4": "MFour", "pu10": "PuTen", "pu40": "PuForty",
+def table_seeds(results: str, out: str, configs: list[str]) -> None:
+    """Test cost of each training seed relative to the policy the method starts from."""
+    rows = []
+    for c in configs:
+        R = load(results, c)
+        if R is None:
+            continue
+        piv = R["ep"].pivot(index="episode", columns="policy", values="cost_total")
+        for prop, ref in (("UL-DFL", "UL"), ("NN-DFL", "UL"), ("DFL", "PTO-Q")):
+            seeds = sorted(k for k in piv.columns if k.startswith(prop + "@s"))
+            if not seeds or prop not in piv:
+                continue
+            rel = [100 * (piv[k].mean() / piv[ref].mean() - 1) for k in seeds]
+            sel = 100 * (piv[prop].mean() / piv[ref].mean() - 1)
+            cells = [f"{v:+.2f}" for v in rel] + ["--"] * (3 - len(rel))
+            rows.append(f"{CONFIG_LABEL[c]} & {TEX[prop]} vs {TEX[ref]} & {sel:+.2f} & " + " & ".join(cells) + r" \\")
+    if rows:
+        tex = ("\\begin{tabular}{llrrrr}\n\\toprule\n"
+               "Setting & Comparison & Selected (\\%) & Seed 0 & Seed 1 & Seed 2 \\\\\n\\midrule\n"
+               + "\n".join(rows) + "\n\\bottomrule\n\\end{tabular}\n")
+        open(os.path.join(out, "tab_seeds.tex"), "w").write(tex)
+
+
+MACRO = {"BSP": "BSP", "BSP-EW": "BSPEW", "UL": "UL", "UL-DFL": "ULDFL", "NN-DFL": "NNDFL", "PTO-Mean": "LAMean", "PTO-Q": "LAQ",
+         "PTO-Q2": "LAQTwo", "Robust": "LARob", "ScenPO-SS": "ScenPO", "DFL": "DFL", "PI": "PI"}
+CFG_MACRO = {"base": "Base", "net_c1": "NetCOne", "net_rc1": "NetRCOne", "fresh": "Fresh", "m2": "MTwo", "m4": "MFour", "pu10": "PuTen", "pu40": "PuForty",
              "fleet_tight": "FleetTight", "fleet_loose": "FleetLoose", "highvar": "HighVar", "route3": "RouteThree",
              "lifo": "Lifo"}
 
@@ -272,18 +315,20 @@ def write_numbers(results: str, out: str, configs: list[str]) -> None:
             m(f"hold{mk}{cm}", f"{r.hold:,.0f}")
             m(f"wastecost{mk}{cm}", f"{r.waste:,.0f}")
             m(f"secs{mk}{cm}", f"{r.solver_secs / 21:.2f}")
-        for k, mk in MACRO.items():
-            key = f"DFL - {k}"
-            if key not in t.index:
-                continue
-            r = t.loc[key]
-            m(f"diff{mk}{cm}", f"{r.mean_diff:,.0f}")
-            m(f"rel{mk}{cm}", f"{100 * r.mean_rel_diff:.1f}")
-            m(f"ci{mk}{cm}", f"[{r.ci_lo:,.0f}, {r.ci_hi:,.0f}]")
-            m(f"win{mk}{cm}", f"{100 * r.win_rate:.0f}")
-            m(f"pt{mk}{cm}", fmt_p(r.p_t))
-            if bool(r.primary) and "p_holm_t" in r and np.isfinite(r.p_holm_t):
-                m(f"pholm{mk}{cm}", fmt_p(r.p_holm_t))
+        for prop, pre in (("DFL", ""), ("UL-DFL", "UL")):
+            for k, mk in MACRO.items():
+                key = f"{prop} - {k}"
+                if key not in t.index:
+                    continue
+                r = t.loc[key]
+                m(f"{pre}diff{mk}{cm}", f"{r.mean_diff:,.0f}")
+                m(f"{pre}rel{mk}{cm}", f"{100 * r.mean_rel_diff:.1f}")
+                m(f"{pre}absrel{mk}{cm}", f"{100 * abs(r.mean_rel_diff):.1f}")  # for "x% less/more" in text
+                m(f"{pre}ci{mk}{cm}", f"[{r.ci_lo:,.0f}, {r.ci_hi:,.0f}]")
+                m(f"{pre}win{mk}{cm}", f"{100 * r.win_rate:.0f}")
+                m(f"{pre}pt{mk}{cm}", fmt_p(r.p_t))
+                if bool(r.primary) and "p_holm_t" in r and np.isfinite(r.p_holm_t):
+                    m(f"{pre}pholm{mk}{cm}", fmt_p(r.p_holm_t))
         if "PI" in s.index:
             best_rule = s.loc[["BSP", "BSP-EW", "UL"], "cost"].min()
             for k, mk in MACRO.items():
@@ -299,11 +344,28 @@ def write_numbers(results: str, out: str, configs: list[str]) -> None:
         if "Robust" in ch:
             m(f"gammaRob{cm}", f"{ch['Robust']['param']}")
         ep = R["ep"]
-        look = ep[ep.policy.isin(["PTO-Mean", "PTO-Q", "Robust", "ScenPO-SS", "DFL", "PI"])]
+        look = ep[ep.policy.isin(["PTO-Mean", "PTO-Q", "PTO-Q2", "Robust", "ScenPO-SS", "DFL", "PI"])]
         m(f"maxgap{cm}", f"{100 * look.max_gap.max():.2f}")
         m(f"nonopt{cm}", f"{int(look.n_nonoptimal.sum())}")
         m(f"fallbacks{cm}", f"{int(look.n_fallback.sum())}")
         m(f"ndecisions{cm}", f"{len(look) * 21:,}")
+    sens_path = os.path.join(results, "solver_sensitivity.csv")
+    if os.path.exists(sens_path):
+        sens = pd.read_csv(sens_path).set_index("config")
+        b = sens.loc["base"]
+        m("noiseSDBase", f"{b.sd_rel:.1f}")
+        m("noiseMinBase", f"{b.min_rel:+.1f}")
+        m("noiseMaxBase", f"{b.max_rel:+.1f}")
+        m("noiseMeanBase", f"{b.mean_rel:+.2f}")
+        m("noiseSDLo", f"{sens.sd_rel.min():.1f}")
+        m("noiseSDHi", f"{sens.sd_rel.max():.1f}")
+        m("noiseAbsMeanMax", f"{sens.mean_rel.abs().max():.2f}")
+        m("noiseSEHi", f"{sens.se_mean_rel.max():.2f}")
+        m("noiseChanged", f"{int(sens.changed.sum())}")
+        m("noiseN", f"{int(sens.n.sum()):,}")
+    else:  # check not run yet: visible placeholders keep the manuscript compilable
+        for k in ("SDBase", "MinBase", "MaxBase", "MeanBase", "SDLo", "SDHi", "AbsMeanMax", "SEHi", "Changed", "N"):
+            m(f"noise{k}", r"\textbf{??}")
     open(os.path.join(out, "numbers_auto.tex"), "w").write("\n".join(L) + "\n")
 
 
@@ -313,16 +375,18 @@ def main():
     ap.add_argument("--out", default="revision_1/figures")
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
-    configs = ["base", "m2", "m4", "pu10", "pu40", "fleet_tight", "fleet_loose", "highvar", "route3", "lifo"]
+    configs = CONFIGS
     R = load(a.results, "base")
     if R is not None:
         table_base(R, a.out)
         table_tests(R, a.out)
+        table_tests(R, a.out, "UL-DFL", "tab_tests_uldfl.tex")
         fig_components(R, a.out)
         fig_store_service(R, a.out)
         fig_dfl_training(R, a.out)
     df = table_sensitivity(a.results, a.out, configs)
     fig_sensitivity(df, a.out, configs)
+    table_seeds(a.results, a.out, configs)
     write_numbers(a.results, a.out, configs)
     print("written to", a.out)
 

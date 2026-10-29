@@ -1,0 +1,24 @@
+{
+  "config": "fresh",
+  "n_rules": 124,
+  "tuned_UL_check": [
+    13026.739456311365,
+    13026.739456311365
+  ],
+  "uldfl_fill": 0.9375217115498431,
+  "uldfl_waste_rate": 0.029565259005127183,
+  "uldfl_cost": 12951.324370782515,
+  "n_dominating": 0,
+  "min_waste_at_uldfl_fill": 0.03148716004824082,
+  "best_rule": "{\"kind\": \"ul\", \"lam\": 1, \"alpha\": 0.96, \"beta\": 0.85}",
+  "best_rule_cost": 12937.253201844203,
+  "best_rule_fill": 0.9386243388972363,
+  "best_rule_waste_rate": 0.03641745408818332,
+  "uldfl_vs_best_rel": 0.00017956809961884666,
+  "uldfl_vs_best_ci": [
+    -49.580797439487256,
+    78.48778446457428
+  ],
+  "uldfl_vs_best_p": 0.6687215060076168,
+  "win_rate": 0.49
+}

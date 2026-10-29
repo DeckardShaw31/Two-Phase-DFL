@@ -1,0 +1,177 @@
+{
+  "config": {
+    "name": "lifo",
+    "layout": "R1",
+    "n_stores": 10,
+    "n_vehicles": 2,
+    "fleet_ratio": 1.25,
+    "store_cap_days": 3.0,
+    "shelf_life": 3,
+    "horizon": 3,
+    "h": 1.0,
+    "p_waste": 5.0,
+    "p_lost": 20.0,
+    "c_route": 1.0,
+    "nb_size": 8.0,
+    "lifo_share": 0.3,
+    "n_train": 200,
+    "n_val": 50,
+    "n_test": 100,
+    "demand_source": "synthetic"
+  },
+  "vehicle_cap": 117.0,
+  "store_cap": [
+    58.0,
+    69.0,
+    64.0,
+    42.0,
+    44.0,
+    68.0,
+    33.0,
+    68.0,
+    66.0,
+    51.0
+  ],
+  "mean_store_demand": [
+    19.22429803579166,
+    22.992292302572515,
+    21.389368476399,
+    14.051423451716738,
+    14.783278159018126,
+    22.791009703767294,
+    11.057696428358513,
+    22.57058335217951,
+    21.90370560071213,
+    17.048298265156312
+  ],
+  "episode_seeds": {
+    "train": "1000+e",
+    "val": "5000+e",
+    "test": "9000+e"
+  },
+  "chosen": {
+    "BSP": {
+      "kind": "bsp",
+      "R": 1,
+      "alpha": 0.95
+    },
+    "BSP-EW": {
+      "kind": "bsp_ew",
+      "R": 1,
+      "alpha": 0.95
+    },
+    "UL": {
+      "kind": "ul",
+      "lam": 1,
+      "alpha": 0.95,
+      "beta": 0.9
+    },
+    "PTO-Q": {
+      "kind": "lookahead",
+      "time_limit": 20.0,
+      "gap": 0.005,
+      "integer_days": 1,
+      "target": "quantile",
+      "param": 0.9
+    },
+    "Robust": {
+      "kind": "lookahead",
+      "time_limit": 20.0,
+      "gap": 0.005,
+      "integer_days": 1,
+      "target": "robust",
+      "param": 0.5
+    },
+    "PTO-Q2": {
+      "kind": "lookahead",
+      "time_limit": 20.0,
+      "gap": 0.005,
+      "integer_days": 1,
+      "target": "quantile2",
+      "param": [
+        0.9,
+        0.8
+      ]
+    },
+    "PTO-Mean": {
+      "kind": "lookahead",
+      "time_limit": 20.0,
+      "gap": 0.005,
+      "integer_days": 1,
+      "target": "mean"
+    },
+    "ScenPO-SS": {
+      "kind": "lookahead",
+      "target": "scenario",
+      "n_scen": 10,
+      "time_limit": 60.0,
+      "gap": 0.005,
+      "integer_days": 1
+    },
+    "PI": {
+      "kind": "lookahead",
+      "time_limit": 20.0,
+      "gap": 0.005,
+      "integer_days": 1,
+      "target": "pi"
+    },
+    "DFL@s0": {
+      "kind": "lookahead",
+      "time_limit": 20.0,
+      "gap": 0.005,
+      "integer_days": 1,
+      "target": "dfl"
+    },
+    "DFL@s1": {
+      "kind": "lookahead",
+      "time_limit": 20.0,
+      "gap": 0.005,
+      "integer_days": 1,
+      "target": "dfl"
+    },
+    "DFL@s2": {
+      "kind": "lookahead",
+      "time_limit": 20.0,
+      "gap": 0.005,
+      "integer_days": 1,
+      "target": "dfl"
+    },
+    "DFL": {
+      "kind": "lookahead",
+      "time_limit": 20.0,
+      "gap": 0.005,
+      "integer_days": 1,
+      "target": "dfl"
+    },
+    "UL-DFL@s0": {
+      "kind": "ul_dfl"
+    },
+    "UL-DFL@s1": {
+      "kind": "ul_dfl"
+    },
+    "UL-DFL@s2": {
+      "kind": "ul_dfl"
+    },
+    "UL-DFL": {
+      "kind": "ul_dfl"
+    },
+    "NN-DFL@s0": {
+      "kind": "nn_dfl"
+    },
+    "NN-DFL@s1": {
+      "kind": "nn_dfl"
+    },
+    "NN-DFL@s2": {
+      "kind": "nn_dfl"
+    },
+    "NN-DFL": {
+      "kind": "nn_dfl"
+    }
+  },
+  "reused_from": "results_v2/base",
+  "python": "3.13.11 (tags/v3.13.11:6278944, Dec  5 2025, 16:26:58) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "numpy": "2.2.6",
+  "pandas": "2.3.3",
+  "runtime_sec": 1706.735286474228
+}

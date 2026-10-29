@@ -11,4 +11,7 @@ for c in m2 m4 pu10 pu40 fleet_tight fleet_loose highvar route3; do
 done
 # issuing-policy robustness: policies tuned/trained under FIFO, evaluated with 30% LIFO customers
 $PY -m experiments.run_config --config lifo --out results/lifo --reuse results/base
+# noise floor: LA-Quantile with planning targets rounded to single precision
+$PY -m experiments.solver_sensitivity --results results
+$PY -m experiments.analyze_dfl --run results/base --out revision_1/figures
 $PY -m experiments.make_figures --results results --out revision_1/figures

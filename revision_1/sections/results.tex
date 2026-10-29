@@ -4,85 +4,140 @@
 
 \subsection{Base case}\label{sec:base}
 
-Table~\ref{tab:base} reports test-set averages over the 40 episodes and Figure~\ref{fig:components} decomposes the costs. Tuning selected order-up-to levels at the 0.95 quantile with daily delivery for BSP and BSP-EW, UL$_\lambda$ with $\lambda=1$, $\alpha=0.95$, $\beta=0.9$, quantile level $\alpha^\star=\alphaQBase$ for LA-Quantile and budget $\Gamma=\gammaRobBase$ for LA-Robust.
+Table~\ref{tab:base} reports test-set averages over the 100 episodes and Figure~\ref{fig:components} decomposes the costs. Tuning selected order-up-to levels at the 0.95 quantile with daily delivery for BSP and BSP-EW, UL$_\lambda$ with $\lambda=1$, $\alpha=0.95$, $\beta=0.9$, quantile level $\alpha^\star=\alphaQBase$ for LA-Quantile, levels $(0.9,0.8)$ for LA-Quantile2 and budget $\Gamma=\gammaRobBase$ for LA-Robust.
 
-\begin{table}[t]
+\begin{table}[H]
 \centering\footnotesize
-\caption{Base case: mean cost per 21-day test episode and its components, fill rate, waste rate (expired units per delivered unit) and store visits per day (40 episodes).}\label{tab:base}
+\caption{Base case: mean cost per 21-day test episode and its components, fill rate, waste rate (expired units per delivered unit) and store visits per day (100 episodes).}\label{tab:base}
 \setlength{\tabcolsep}{4pt}
 \resizebox{\textwidth}{!}{\input{figures/tab_base.tex}}
 \end{table}
 
-\begin{figure}[t]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{fig_components.pdf}
 \caption{Cost composition of each policy in the base case.}\label{fig:components}
 \end{figure}
 
-Four observations stand out. First, uncertainty is expensive: with perfect demand information the same lookahead costs \costPIBase{}, about half of the best implementable policy, almost entirely because lost sales and holding vanish. Second, point forecasts are a poor input for perishable replenishment. LA-Mean plans to sell exactly the expected demand and loses \lostLAMeanBase{} per episode in lost sales (fill rate \fillLAMeanBase\%), as Proposition~\ref{prop:marginal} suggests when $p_u$ is four times $p_s$. Third, the three stock-age-based inventory rules are the cheapest policies: UL$_\lambda$, BSP and BSP-EW cost between \costULBase{} and \costBSPEWBase{} with a fill rate of \fillULBase\% and a waste rate near 2.6\%. With daily review, little of the current stock is at risk of expiring before it is sold, so the waste correction of BSP-EW rarely changes an order.
+Four observations stand out. First, uncertainty is expensive: with perfect demand information the same lookahead costs \costPIBase{}, about half of the best implementable policy, almost entirely because lost sales and holding vanish. Second, point forecasts are a poor input for perishable replenishment. LA-Mean plans to sell exactly the expected demand and loses \lostLAMeanBase{} per episode in lost sales (fill rate \fillLAMeanBase\%), as Proposition~\ref{prop:marginal} suggests when $p_u$ is four times $p_s$. Third, among the policies without learning, the three stock-age-based inventory rules are the cheapest: UL$_\lambda$, BSP and BSP-EW cost between \costULBase{} and \costBSPEWBase{} with a fill rate of \fillULBase\% and a waste rate of about 2.5\%. With daily review, little of the current stock is at risk of expiring before it is sold, so the waste correction of BSP-EW rarely changes an order.
 
-Fourth, integration with routing does reduce travel but loses more on the inventory side. The lookahead policies visit 7.7--8.9 stores per day instead of 9.2--9.6 and save 400--900 in routing, but LA-Quantile, LA-Robust and ScenPO-SS incur 27--32\% more holding cost than the rules and waste about twice as much (waste rates 4.5--5.4\%). A deterministic plan that covers two or three days with quantile targets stacks a safety buffer on every covered day, even though the next day's re-planning will correct any shortfall; the stochastic scenario model reduces lost sales but, because its single plan must work for all scenarios, it also covers several days generously.
+Fourth, integration with routing does reduce travel but loses more on the inventory side. The uncertainty-aware lookahead policies visit 7.7--9.0 stores per day instead of 9.2--9.6 and save about 500--1,000 in routing, but LA-Quantile and ScenPO-SS hold 26--37\% more stock than the rules and waste about twice as much (waste rates \wasteScenPOBase\% and \wasteLAQBase\%), while LA-Robust avoids the waste at the price of a fill rate of \fillLARobBase\%. A deterministic plan that covers two or three days with quantile targets stacks a safety buffer on every covered day, even though the next day's re-planning will correct any shortfall. LA-Quantile2, which keeps the 0.9 quantile only for the implemented day and plans later days at the 0.8 quantile, halves the waste rate of LA-Quantile (\wasteLAQTwoBase\% vs.\ \wasteLAQBase\%) and costs 5.7\% less; the scenario model reduces lost sales but, because its single plan must work for all scenarios, it also covers several days generously.
 
-\begin{table}[t]
+\begin{table}[H]
 \centering\footnotesize
-\caption{Paired episode-level comparisons of LA-DFL with every other policy (base case). Negative differences favour LA-DFL. Holm adjustment over the five prespecified primary comparisons.}\label{tab:tests}
+\caption{Paired episode-level comparisons of UL-DFL with every other policy (base case, 100 episodes). Negative differences favour UL-DFL. Holm adjustment over the five prespecified primary comparisons of UL-DFL.}\label{tab:testsul}
+\setlength{\tabcolsep}{4pt}
+\resizebox{\textwidth}{!}{\input{figures/tab_tests_uldfl.tex}}
+\end{table}
+
+UL-DFL is the cheapest implementable policy (Table~\ref{tab:testsul}). It costs \ULabsrelULBase\% less than the tuned UL$_\lambda$ from which it starts (95\% CI \ULciULBase{}, lower in \ULwinULBase\% of the episodes), \ULabsrelBSPEWBase\% less than BSP-EW, \ULabsrelScenPOBase\% less than ScenPO-SS, \ULabsrelLAQTwoBase\% less than LA-Quantile2 and \ULabsrelDFLBase\% less than LA-DFL; all five primary comparisons are significant after Holm adjustment ($p<0.001$). The gain over UL$_\lambda$ is a waste reduction: at the same fill rate (\fillULDFLBase\%) and almost the same lost-sales cost, UL-DFL lowers the waste rate from \wasteULBase\% to \wasteULDFLBase\%, i.e.\ it throws away a fifth fewer units, while holding and routing costs rise by at most 0.5\%.
+
+\begin{table}[H]
+\centering\footnotesize
+\caption{Paired episode-level comparisons of LA-DFL with every other policy (base case, 100 episodes). Negative differences favour LA-DFL. Holm adjustment over the five prespecified primary comparisons of LA-DFL.}\label{tab:tests}
 \setlength{\tabcolsep}{4pt}
 \resizebox{\textwidth}{!}{\input{figures/tab_tests.tex}}
 \end{table}
 
-LA-DFL is the cheapest of the integrated policies (Table~\ref{tab:tests}). It reduces cost by \relLAQBase\% relative to LA-Quantile (95\% CI \ciLAQBase{}, lower in \winLAQBase\% of the episodes), by \relLARobBase\% relative to LA-Robust and by \relScenPOBase\% relative to ScenPO-SS (Holm-adjusted $p\le$ \pholmScenPOBase{}). It achieves this by halving the waste rate of LA-Quantile (\wasteDFLBase\% vs.\ \wasteLAQBase\%) and cutting its holding cost by more than a fifth, while accepting somewhat more lost sales. It does not, however, beat the inventory rules: LA-DFL costs \relBSPEWBase\% more than BSP-EW and \relULBase\% more than UL$_\lambda$, and both differences are significant. The rules remain better in 78--85\% of the episodes.
+LA-DFL improves the deterministic lookahead from which it starts (Table~\ref{tab:tests}). It reduces cost by \absrelLAQBase\% relative to LA-Quantile (95\% CI \ciLAQBase{}, lower in \winLAQBase\% of the episodes) and by \absrelLARobBase\% relative to LA-Robust; it is \absrelScenPOBase\% cheaper than ScenPO-SS, which is not significant (Holm-adjusted $p=$ \pholmScenPOBase{}). It does so by halving the waste rate of LA-Quantile (\wasteDFLBase\% vs.\ \wasteLAQBase\%) while accepting somewhat more lost sales. The simple LA-Quantile2, however, is \absrelLAQTwoBase\% cheaper still (CI \ciLAQTwoBase{}): the gain of LA-DFL over LA-Quantile is captured by a day-specific quantile level, which LA-DFL discovered (Section~\ref{sec:dflresults}) but did not improve on. LA-DFL also remains \absrelBSPEWBase\% more expensive than BSP-EW and \absrelULBase\% more expensive than UL$_\lambda$, both significant.
 
-\subsection{What the decision-focused targets learn}\label{sec:dflresults}
+\subsection{What the decision-focused corrections learn}\label{sec:dflresults}
 
-Table~\ref{tab:corrections} summarises the learned corrections on the decision states that LA-DFL visits in 20 test episodes. The dominant pattern is temporal. For the implemented day the network keeps the target at about the 0.91 quantile, essentially the tuned LA-Quantile level, but it lowers the targets of the second and third lookahead days to about the 0.79 and 0.76 quantiles. In inventory terms, the network has learned that only today's shortfall is irreversible: tomorrow's planned demand will be re-planned with tomorrow's stock and forecast, so a full safety buffer on that day mostly turns into carried stock and, with a three-day shelf life, into waste. This is precisely the recourse that a deterministic lookahead ignores and that Proposition~\ref{prop:dfl} lets the gradient account for. Context-specific corrections are smaller: targets are lowered somewhat more on promotion days, where the forecast spread is already wide, and slightly less when the store holds more or older stock. Validation cost improved during the first three epochs and deteriorated afterwards (Figure~\ref{fig:dfltraining}), which is why model selection on closed-loop validation cost is part of the method.
+Table~\ref{tab:ulcorrections} summarises the learned corrections of UL-DFL on the delivery decisions it takes in the 100 base-case test episodes (the rule triggers a delivery on 94\% of the store-days; on the others the correction has no effect). The average correction is nearly zero: the tuned 0.95 level is right on average. What the network learns is \emph{when} to deviate from it, along two dimensions that a one-day order-up-to rule cannot see. On promotion days it lowers the level to an implied service level of about 0.89, i.e.\ by about a third of a day of mean demand. Promotions raise the forecast spread, so the 0.95 quantile lies far above the expected demand, and whatever is left when the promotion ends meets regular demand and ages. Over the week it raises the level from Wednesday to Friday (implied levels 0.96--0.97) and lowers it from Saturday to Monday (0.92--0.93): a unit left over before the weekend is sold in the Saturday peak, whereas a unit left over after it meets lower demand for the rest of its shelf life. The age of the stock on hand matters little, because the rule's order quantity already nets out the stock projected to expire. Both corrections reduce the stock that is still on the shelf when demand falls, which is where the waste of the rule arises.
 
-\begin{table}[t]
+\begin{table}[H]
 \centering\footnotesize
-\caption{Learned corrections of LA-DFL on the decision states of 20 test episodes (base case): mean correction $\delta_\theta$ in forecast-scale units, implied quantile level of the planning target, and target relative to the mean forecast. $k$ is the lookahead offset; stock is measured in days of mean store demand.}\label{tab:corrections}
-\resizebox{\textwidth}{!}{\input{figures/tab_dfl_corrections.tex}}
+\caption{Learned corrections of UL-DFL on the delivery decisions of 100 test episodes (base case): mean correction $\delta_\theta$ of the order-up-to level in units of the forecast scale, implied service level $\Phi(z_{0.95}+\delta_\theta)$, and change of the order-up-to level in days of mean store demand. Stock is measured in days of mean store demand.}\label{tab:ulcorrections}
+\resizebox{0.85\textwidth}{!}{\input{figures/tab_uldfl_corrections.tex}}
 \end{table}
 
-\begin{figure}[t]
+Table~\ref{tab:corrections} reports the corrections of LA-DFL on the decision states of 20 test episodes. Here the dominant pattern is temporal within the plan. For the implemented day the network keeps the target at about the 0.91 quantile, essentially the tuned LA-Quantile level, but it lowers the targets of the second and third lookahead days to about the 0.80 and 0.77 quantiles. In inventory terms, the network has learned that only today's shortfall is irreversible: tomorrow's planned demand will be re-planned with tomorrow's stock and forecast, so a full safety buffer on that day mostly turns into carried stock and, with a three-day shelf life, into waste. This is precisely the recourse that a deterministic lookahead ignores and that Proposition~\ref{prop:dfl} lets the gradient account for. Context-specific corrections are small: targets are lowered somewhat more on promotion days and slightly less when the store holds more or older stock. The day-specific levels learned by LA-DFL are those that the tuning of LA-Quantile2 selects, $(0.9,0.8)$, which explains why the two policies perform alike.
+
+\begin{table}[H]
+\centering\footnotesize
+\caption{Learned corrections of LA-DFL on the decision states of 20 test episodes (base case): mean correction $\delta_\theta$ in forecast-scale units, implied quantile level of the planning target, and target relative to the mean forecast. $k$ is the lookahead offset; stock is measured in days of mean store demand.}\label{tab:corrections}
+\resizebox{0.85\textwidth}{!}{\input{figures/tab_dfl_corrections.tex}}
+\end{table}
+
+For both learners the closed-loop validation cost improved during the first three to five epochs and deteriorated afterwards (Figure~\ref{fig:dfltraining}), which is why model selection on closed-loop validation cost is part of the method. The result does not depend on a lucky seed (Table~\ref{tab:seeds}): the three UL-DFL networks are 0.8--0.9\% cheaper than UL$_\lambda$ on the base-case test set, and the three LA-DFL networks 3.5--4.7\% cheaper than LA-Quantile.
+
+\begin{figure}[H]
 \centering
-\includegraphics[width=0.5\textwidth]{fig_dfl_training.pdf}
-\caption{Closed-loop validation cost of LA-DFL by training epoch (base case). Epoch 0 is the tuned LA-Quantile policy.}\label{fig:dfltraining}
+\includegraphics[width=0.9\textwidth]{fig_dfl_training.pdf}
+\caption{Closed-loop validation cost by training epoch and seed (base case). Left: LA-DFL, epoch 0 is the tuned LA-Quantile policy. Right: UL-DFL, epoch 0 is the tuned UL$_\lambda$ rule.}\label{fig:dfltraining}
 \end{figure}
+
+\begin{table}[H]
+\centering\footnotesize
+\caption{Test-cost difference (\%) of each trained network relative to the policy it starts from, by seed; ``selected'' is the network chosen on validation cost.}\label{tab:seeds}
+\input{figures/tab_seeds.tex}
+\end{table}
+
+\subsection{Can re-tuning the rule reproduce UL-DFL?}\label{sec:frontier}
+
+A natural objection is that UL-DFL merely finds better values of the rule's parameters than the tuning grid of Section~\ref{sec:design}. Figure~\ref{fig:frontier} places UL-DFL in the waste--service plane together with 124 parameterisations of the rules, all evaluated on the base-case test episodes: UL$_\lambda$ with $\lambda=1$, ten service levels $\alpha$ between 0.85 and 0.99 and eight trigger levels $\beta$ between 0.5 and 0.99, UL$_\lambda$ with $\lambda\in\{2,3\}$ on the original grid, and daily BSP and BSP-EW at the same ten service levels. No parameterisation serves at least UL-DFL's fill rate (96.2\%) with no more waste: at that fill rate the least waste any rule achieves is 2.48\% of the delivered units, against 1.98\% for UL-DFL. The learned corrections move the policy beyond the waste--service frontier of the rules, which no choice of a single service level and trigger can do.
+
+In total cost the comparison is closer. The cheapest of the 124 rules in hindsight---selected on the test episodes themselves, an advantage UL-DFL does not have---is UL$_\lambda$ with $\alpha=0.96$ and $\beta=0.8$. It costs 10,715 per episode, the same as UL-DFL (difference $-0.05\%$, 95\% CI $[-59, 46]$), but it gets there differently: its lower trigger saves routing (4,168 vs.\ 4,337), and it wastes 2.80\% of the delivered units, 41\% more than UL-DFL. Part of the 0.8\% cost advantage of UL-DFL over the tuned rule therefore reflects the resolution of the tuning grid; the waste reduction at a given service level does not. The real-data case gives the same picture: no rule parameterisation reaches UL-DFL's fill rate (93.8\%) with its waste rate (2.96\%; the least any rule achieves at that fill rate is 3.15\%), and the best rule in hindsight ($\alpha=0.96$, $\beta=0.85$) matches its cost ($+0.02\%$ for UL-DFL, 95\% CI $[-50, 78]$) while wasting 23\% more.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.62\textwidth]{fig_frontier.pdf}
+\caption{Waste rate against fill rate of 124 parameterisations of the rules and of UL-DFL (base case, 100 test episodes). The line connects the rule parameterisations that are not dominated in both measures.}\label{fig:frontier}
+\end{figure}
+
+\subsection{Does the learner need the rule?}\label{sec:nndfl}
+
+The converse question is whether the rule contributes anything once a network is trained on realised cost. NN-DFL answers it: it has the same inputs, differentiable simulation, loss, seeds and model selection as UL-DFL, but outputs the delivery directly, without the visit trigger and order-up-to structure of UL$_\lambda$. In the base case it costs \costNNDFLBase{} per episode, \ULabsrelNNDFLBase\% more than UL-DFL (95\% CI of UL-DFL minus NN-DFL \ULciNNDFLBase{}) and more than the tuned UL$_\lambda$ it would replace. It does learn to waste little (waste rate \wasteNNDFLBase\%), but it loses more sales and, lacking a trigger, visits slightly more stores (\visitsNNDFLBase{} per day against \visitsULDFLBase{}). Across the thirteen configurations UL-DFL is significantly cheaper than NN-DFL in twelve, by 0.8--4.9\% (Table~\ref{tab:uldfldiffs}). The gap is largest with expensive routing, where the trigger of UL-DFL cuts store visits to \visitsULDFLRouteThree{} per day while NN-DFL keeps visiting \visitsNNDFLRouteThree{}, and the two tie with a two-day shelf life, where frequent small deliveries suit the short shelf life. NN-DFL is more expensive than UL$_\lambda$ itself in eleven of the thirteen configurations (Table~\ref{tab:seeds}). These comparisons are secondary, because the ablation was added after the primary hypotheses were fixed, but they are consistent: with the same network and learning signal, the gain comes from placing the learner on the rule.
 
 \subsection{Sensitivity analysis}\label{sec:sensitivity}
 
-Table~\ref{tab:sensitivity} reports test costs across the configurations, and Table~\ref{tab:dfldiffs} the paired differences of LA-DFL. \SensitivityText
+Table~\ref{tab:sensitivity} reports test costs across the configurations, and Tables~\ref{tab:uldfldiffs} and~\ref{tab:dfldiffs} the paired differences of the two learned policies. \SensitivityText
 
-\begin{table}[t]
+\begin{table}[H]
 \centering\footnotesize
 \caption{Mean test cost per episode by configuration (one factor changed at a time; bold: lowest implementable policy), and fill rates of selected policies.}\label{tab:sensitivity}
 \setlength{\tabcolsep}{4pt}
 \resizebox{\textwidth}{!}{\input{figures/tab_sensitivity.tex}}
 \end{table}
 
-\begin{table}[t]
+\begin{table}[H]
+\centering\footnotesize
+\caption{Paired cost difference of UL-DFL relative to each comparator, in percent of the comparator's cost, by configuration. Bold: 95\% paired bootstrap interval excludes zero.}\label{tab:uldfldiffs}
+\resizebox{\textwidth}{!}{\input{figures/tab_uldfl_diffs.tex}}
+\end{table}
+
+\begin{table}[H]
 \centering\footnotesize
 \caption{Paired cost difference of LA-DFL relative to each comparator, in percent of the comparator's cost, by configuration. Bold: 95\% paired bootstrap interval excludes zero.}\label{tab:dfldiffs}
 \resizebox{\textwidth}{!}{\input{figures/tab_dfl_diffs.tex}}
 \end{table}
 
-\begin{figure}[t]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.95\textwidth]{fig_sensitivity.pdf}
-\caption{Cost of selected policies relative to LA-Quantile, by configuration.}\label{fig:sensitivity}
+\caption{Cost of selected policies relative to LA-Quantile, by configuration (LA-Mean is omitted for readability).}\label{fig:sensitivity}
 \end{figure}
+
+\subsection{Real-data case}\label{sec:realresults}
+
+On observed demand (column ``Real data'' of Tables~\ref{tab:sensitivity} and~\ref{tab:uldfldiffs}) the ranking of the policy families is the same as in the synthetic base case. UL-DFL is the cheapest policy (\costULDFLFresh{} per episode), \ULabsrelULFresh\% below UL$_\lambda$ (95\% CI \ULciULFresh{}, Holm-adjusted $p=\ULpholmULFresh$), \ULabsrelBSPEWFresh\% below BSP-EW and \ULabsrelScenPOFresh\% below ScenPO-SS, the best integrated policy. Without learning, the rules (\costULFresh--\costBSPEWFresh) are again cheaper than every integrated policy, and LA-Mean is again the most expensive. Service is lower than in the synthetic study for all policies (fill rate \fillULFresh\% for UL$_\lambda$), because observed demand is more volatile and its promotion and weekend peaks occasionally exceed the daily fleet capacity.
+
+The saving of UL-DFL has a different composition on real data. It reduces lost sales by 2.3\% and waste by 4.6\% while holding 3.1\% more stock, and its fill rate rises from \fillULFresh\% to \fillULDFLFresh\%. The learned corrections explain why. Demand in these data peaks at the weekend (Saturday and Sunday are 16\% and 29\% above the average day of the history window, Wednesday to Friday 8--10\% below it), and the network raises the order-up-to level on Thursday and Friday (implied service levels 0.96 and 0.99, Friday by 0.3 days of mean demand) and lowers it on Saturday to Monday (0.92, 0.85 and 0.92). Units delivered on Friday are carried into the weekend peak, which a one-day level misses, and units left over on Sunday meet the weaker start of the week. This is the same rule as in the synthetic data---build stock before the weekly peak, cut it on the days after---but here the peak is larger and falls on different days, so the correction mostly prevents weekend stock-outs instead of removing waste. Discounts, which are offered on 44\% of the store-days in these data and are mostly small, have no systematic effect on the correction. LA-DFL is \absrelLAQFresh\% cheaper than LA-Quantile, which is not significant (Holm-adjusted $p=\pholmLAQFresh$), and LA-Quantile2 is again cheaper than LA-DFL, though not significantly.
 
 \subsection{Store-level service}\label{sec:stores}
 
-Average fill rates hide how service is distributed over the network (Figure~\ref{fig:stores}). The inventory rules serve every store at least 95.4\% and, if anything, serve distant stores slightly better (correlation between store fill rate and depot distance $+0.75$ for BSP-EW). The deterministic lookahead policies do the opposite: their fill rate falls with distance (correlations between $-0.19$ and $-0.36$), and the worst-served store, a mid-distance store, reaches only 92.0\% under LA-Quantile and 92.4\% under LA-DFL. Consolidating deliveries saves the most travel at stores that are expensive to reach, and the plan then accepts shortages there. ScenPO-SS spreads service more evenly (worst store 95.4\%). This effect is relevant for retailers with service-level agreements per store: an integrated plan that is cheaper overall may concentrate stock-outs at peripheral stores.
+Average fill rates hide how service is distributed over the network (Figure~\ref{fig:stores}). In all three layouts the inventory rules, with or without learning, serve every store at least 95.4\%. The deterministic lookahead policies do not: in the base layout their worst-served store, one of the more distant stores, reaches only 89.9--90.6\% (LA-Quantile, LA-Quantile2, LA-Robust, LA-DFL), and in the clustered and mixed layouts 89.6--94.5\%. Consolidating deliveries saves the most travel at stores that are expensive to reach, and the plan then accepts shortages there; in the base layout the store fill rate of the lookahead policies falls with distance from the depot (correlation $-0.24$ to $-0.26$ for LA-Quantile, LA-Quantile2 and LA-DFL), whereas that of the rules rises with it ($+0.81$). In the clustered and mixed layouts, where most stores are about equally far from the depot, the link with distance is weaker but the gap in the worst-served store remains. ScenPO-SS spreads service more evenly (worst store at least 95.0\% in all three layouts). This effect is relevant for retailers with service-level agreements per store: an integrated plan may concentrate stock-outs at individual stores even when its average fill rate is high.
 
-\begin{figure}[t]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.6\textwidth]{fig_store_service.pdf}
-\caption{Store fill rate against distance from the depot (base case, mean over 40 test episodes).}\label{fig:stores}
+\caption{Store fill rate against distance from the depot (base case, mean over 100 test episodes).}\label{fig:stores}
 \end{figure}
 
 \subsection{Computation}\label{sec:computation}
 
-All \ndecisionsBase{} lookahead decisions of the base-case test were solved to a proven gap of at most \maxgapBase\%, with \nonoptBase{} time-limit stops and \fallbacksBase{} fallbacks; the same holds in every configuration reported. A deterministic lookahead decision takes 1.1--1.4 seconds on average and a ScenPO-SS decision \secsScenPOBase{} seconds; the rules need milliseconds. Training LA-DFL (1,260 states, eight epochs including closed-loop validation) took about 16 minutes with 15 worker processes, and one base-case configuration, including tuning of all policies, about 35 minutes. Once trained, LA-DFL costs no more online than any deterministic lookahead.
+All \ndecisionsBase{} lookahead decisions of the base-case test were solved to a proven gap of at most \maxgapBase\%, with \nonoptBase{} time-limit stops and \fallbacksBase{} fallbacks; the same holds in every configuration reported. With 15 decisions solved in parallel, a deterministic lookahead decision takes about \secsLAQBase{} seconds and a ScenPO-SS decision \secsScenPOBase{} seconds; the rules, with or without learned corrections, need milliseconds. Training one UL-DFL network (30 epochs over 200 episodes, including closed-loop validation after every epoch) took about two minutes; training one LA-DFL network (2,100 states, eight epochs including MILP re-solves and closed-loop validation) about 45 minutes. The complete base case, including tuning of all policies and three seeds of each learner, took 4.2 hours, and each other configuration 1.0--2.6 hours with 13--15 parallel workers (training three NN-DFL networks adds about ten minutes).
+
+The lookahead policies are deterministic: solving the same decision twice returns the same plan. Their closed-loop cost is nevertheless sensitive to negligible changes in the planning input, because several plans lie within the 0.5\% optimality gap and the solver returns the first one it proves; a different plan on one day changes the stock and therefore every later decision. To quantify this noise floor we re-ran LA-Quantile on the test episodes with its planning targets rounded to single precision, a relative change below $10^{-7}$. The plan changed on at least one day in each of the \noiseN{} test episodes of the thirteen configurations, and episode costs moved by \noiseSDBase\% (standard deviation) in the base case, between \noiseMinBase\% and \noiseMaxBase\%, and by \noiseSDLo--\noiseSDHi\% across configurations. Averaged over 100 episodes these changes largely cancel (mean change at most \noiseAbsMeanMax\% in absolute value, standard error at most \noiseSEHi\%). Paired comparisons remain valid, because this variation is part of the episode-level noise they account for, but differences of well below one percent between two lookahead policies should not be interpreted as a systematic effect. The rule-based policies, including UL-DFL, do not solve an optimisation model for their orders and are not affected.
 
 \input{sections/verification}

@@ -98,10 +98,13 @@ class DFLTargetModel:
         feats = row_features(ctx.X, ctx.mu, ctx.qs, ctx.B, self.mean_store, H)
         base = quantile_at(ctx.qs, self.alpha).reshape(-1)
         sig = sigma_from_quantiles(ctx.qs).reshape(-1)
+        # only the correction comes from the float32 network; the targets are assembled in
+        # float64 so that a zero correction reproduces the quantile policy bit for bit (the
+        # MILP incumbent within the 0.5% gap is sensitive to float32 rounding of its inputs)
         with torch.no_grad():
-            d = self.torch_targets(torch.from_numpy(feats), torch.from_numpy(base).float(),
-                                   torch.from_numpy(sig).float())
-        return d.numpy().reshape(N, H).astype(float)
+            x = (torch.from_numpy(feats) - torch.as_tensor(self.x_mean)) / torch.as_tensor(self.x_std)
+            delta = self.net(x).numpy().astype(float)
+        return np.maximum(base + sig * delta, 0.0).reshape(N, H)
 
 
 def coverage_quantities(d: torch.Tensor, visits: np.ndarray, vehicle_of: np.ndarray, B0: torch.Tensor,

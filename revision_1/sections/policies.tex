@@ -2,7 +2,7 @@
 \section{Replenishment policies}\label{sec:policies}
 % ============================================================================
 
-All policies receive the same information each day: the observed age-structured stock $B_t$ and the same contextual forecasts. They differ only in how the forecasts and the stock are turned into deliveries and routes. Table~\ref{tab:policies} summarises the nine policies; parameters marked as tuned are selected on validation episodes only.
+All policies receive the same information each day: the observed age-structured stock $B_t$ and the same contextual forecasts. They differ only in how the forecasts and the stock are turned into deliveries and routes. Table~\ref{tab:policies} summarises the twelve policies; parameters marked as tuned are selected on validation episodes only. Decision-focused learning is applied at two levels: on top of the deliver-up-to-level rule (UL-DFL, Section~\ref{sec:uldfl}), where it learns the order-up-to level, and on top of the deterministic lookahead (LA-DFL, Section~\ref{sec:dfl}), where it learns the planning targets.
 
 \subsection{Shared forecasts}\label{sec:forecasts}
 
@@ -18,6 +18,20 @@ These policies represent current replenishment practice: an inventory rule sets 
 
 \paragraph{UL$_\lambda$: deliver-up-to-level rule \citep{crama2018stochastic}.} A store is visited when its stock does not cover the current day's demand at service level $\beta$, i.e.\ when $\sum_r B_{irt}<\hat Q_\beta(D_{it})$; it then receives enough to reach the $\alpha$-quantile of the demand of the next $\lambda$ days, net of stock expected to expire. This is the state-dependent ``deliver-up-to-level'' rule that \citet{crama2018stochastic} identify as a simple policy with good performance in some settings; the original paper combines it with its own routing heuristic, whereas here the selected deliveries are routed exactly.
 
+\subsection{Decision-focused order-up-to levels (UL-DFL)}\label{sec:uldfl}
+
+UL-DFL (proposed) keeps the visit trigger and the delivery logic of UL$_\lambda$ and learns how far the order-up-to level of each store-day should deviate from the forecast quantile:
+\begin{equation}\label{eq:uldfl}
+\tilde S_{it}(\theta)=S_{it}+\hat s_{it}\,\delta_\theta(\phi_{it}),\qquad q_{it}=\mathbf 1\Big[\textstyle\sum_r B_{irt}<\hat Q_\beta(D_{it})\Big]\,\Big(\tilde S_{it}-\textstyle\sum_r B_{irt}+\widehat{EW}_{it}\Big)^{+},
+\end{equation}
+where $S_{it}=\hat Q_\alpha\big(\sum_{k<\lambda}D_{i,t+k}\big)$ is the tuned rule's level, $\hat s_{it}$ the forecast scale of the $\lambda$-day demand, and $\delta_\theta$ a two-layer network (32 SiLU units per layer) whose output layer is initialised to zero, so that training starts exactly at the tuned UL$_\lambda$. The input $\phi_{it}$ contains the store's forecast features for day $t$ (discount, promotion and holiday flags, temperature forecast, weekday, recent demand), the scaled mean, scale and 5--95\% range of the forecast, and the store's stock by remaining life. A correction $\delta_\theta=0.5$ raises the level by half a forecast standard deviation; under a normal approximation it moves the implied service level from $\alpha$ to $\Phi(z_\alpha+\delta_\theta)$.
+
+The rule covers only $\lambda$ days and ignores what happens to the stock afterwards, in particular that units delivered today are carried into tomorrow and expire after $m$ days. UL-DFL learns this from the realised cost of whole episodes. On a training episode the rule is simulated for all 21 decision days with the age-structured FIFO dynamics of Section~\ref{sec:system}, written as a differentiable program: sales, waste and carried stock are compositions of minima and differences of the stock vector and the deliveries, shelf capacity caps each delivery, and fleet capacity scales the day's deliveries down proportionally when their total exceeds $KQ$. The visit trigger is held fixed (it is piecewise constant in $\theta$). Back-propagation through time then returns the gradient of the episode's holding, waste and lost-sales cost with respect to $\theta$. Following Proposition~\ref{prop:marginal}, an extra unit in a delivery is pushed up when, in hindsight, it would have prevented a lost sale on any later day, and pushed down when it would have been carried for several nights or wasted; unlike the lookahead-based learner below, these effects are traced over the whole episode rather than over the $H$ days of a plan. Neural ordering policies trained through simulated inventory dynamics in this way have been proposed for single-location lost-sales systems by \citet{alvo2023neural}; we use the same principle to correct, rather than replace, a published PIRP rule.
+
+Exact packing, routing and routing cost do not enter the gradient. They enter model selection: after every epoch the current network is run in the full closed-loop simulator on the validation episodes, and the network with the lowest validation cost, which may be the tuned rule itself, is kept. We train three networks from different random seeds and keep the one with the lowest validation cost. Once trained, UL-DFL needs one forward pass per store and day, so it is as fast online as UL$_\lambda$.
+
+\paragraph{NN-DFL: the same learner without the rule.} To separate the contribution of the rule's structure from that of learning, NN-DFL uses the same inputs, the same differentiable episode simulation, loss, seeds and validation-based model selection, but none of the structure of UL$_\lambda$: the network outputs the delivery directly, $q_{it}=\bar d_i\,(1+\delta_\theta(\phi_{it}))^{+}$ with $\bar d_i$ the store's mean daily demand, a store is visited whenever $q_{it}>0$, and training starts from delivering one day of mean demand to every store every day. This is the type of neural ordering policy trained through simulated inventory dynamics by \citet{alvo2023neural}. Because it starts far from a good policy, it is given twice as many epochs as UL-DFL.
+
 \subsection{Integrated rolling-horizon policies}\label{sec:la}
 
 These policies solve the lookahead MILP of Section~\ref{sec:lookahead} every day with $H=3$ ($H=2$ when $m=2$) and implement day 0. They differ only in the planning demand.
@@ -25,35 +39,39 @@ These policies solve the lookahead MILP of Section~\ref{sec:lookahead} every day
 \begin{itemize}[leftmargin=*]
 \item \textbf{LA-Mean} uses the point forecasts $\hat\mu$: the classical predict-then-optimise policy.
 \item \textbf{LA-Quantile} uses $\hat Q_\alpha$ for every store and day. With $\alpha$ tuned on validation episodes, this is a parametric cost-function approximation in the sense of \citet{powell2019unified}: a deterministic lookahead whose inputs are adjusted to perform well under uncertainty.
+\item \textbf{LA-Quantile2} uses $\hat Q_{\alpha_0}$ on the implemented day and $\hat Q_{\alpha_1}$ on all later lookahead days, with $(\alpha_0,\alpha_1)$ tuned. It is an ablation of LA-DFL: it can represent the day-specific safety stock that LA-DFL learns (Section~\ref{sec:dflresults}) but none of its context- or stock-dependent corrections.
 \item \textbf{LA-Robust} uses budgeted demand uncertainty \citep{bertsimas2006robust}. Demand on lookahead day $k$ ranges over $[\hat\mu_k,\hat\mu_k+\hat\delta_k]$ with $\hat\delta_k=\hat Q_{0.95}-\hat\mu_k$, and the cumulative scaled deviation of the first $k+1$ days is at most $\Gamma_k=\min\{\Gamma\sqrt{k+1},k+1\}$. The planning path reproduces the worst-case cumulative demand of every prefix, which is the deterministic equivalent shown by \citet{bertsimas2006robust} for inventory systems and used in robust inventory routing \citep{solyali2012robust}. $\Gamma$ is tuned.
 \item \textbf{ScenPO-SS} is the Scenario Predict-then-Optimize method of \citet{jia2025scenario}: ten demand scenarios are sampled from the multi-horizon quantile forecasts (each scenario draws a quantile band uniformly and then draws every store-day value uniformly inside that band), and the single-stage scenario model chooses one delivery and routing plan that minimises the average cost over the scenarios. Two adaptations are needed and disclosed: inventory follows the perishable age-structured dynamics with lost sales instead of the original non-perishable backlogging model, and the quantile model is LightGBM rather than an MQ-RNN, so that all policies use the same forecasts.
 \item \textbf{LA-DFL} (proposed) uses decision-focused planning targets (Section~\ref{sec:dfl}).
 \item \textbf{PI} solves the same lookahead with the realised demand of the next $H$ days. It is a value-of-information reference, not a lower bound.
 \end{itemize}
 
-\begin{table}[t]
+\begin{table}[H]
 \centering\small
 \caption{Policies compared. All use the same observed stock and the same forecasts.}\label{tab:policies}
-\begin{tabular}{p{2.0cm}p{3.0cm}p{4.3cm}p{3.3cm}}
+\begin{tabular}{>{\raggedright\arraybackslash}p{2.3cm}>{\raggedright\arraybackslash}p{3.1cm}>{\raggedright\arraybackslash}p{4.6cm}>{\raggedright\arraybackslash}p{3.4cm}}
 \toprule
 Policy & Family & Decision rule & Tuned on validation \\
 \midrule
 BSP & Inventory rule, route second & Periodic base-stock on total stock & Cycle $R$, quantile $\alpha$ \\
 BSP-EW & Inventory rule, route second & Base-stock plus estimated waste \citep{broekmeulen2009heuristic,haijema2019improved} & $R$, $\alpha$ \\
 UL$_\lambda$ & Stochastic PIRP rule & Deliver-up-to-level \citep{crama2018stochastic} & $\lambda$, $\alpha$, $\beta$ \\
+UL-DFL & Stochastic PIRP rule & Deliver-up-to-level with decision-focused order-up-to level (this paper) & Network weights, early stopping, seed \\
+NN-DFL & Neural ordering policy (ablation) & Delivery output by a network trained like UL-DFL \citep{alvo2023neural} & Network weights, early stopping, seed \\
 LA-Mean & Rolling-horizon PIRP & Mean forecasts & -- \\
 LA-Quantile & Rolling-horizon PIRP (CFA) & Quantile forecasts & $\alpha$ \\
+LA-Quantile2 & Rolling-horizon PIRP (CFA) & Day-specific quantile forecasts & $\alpha_0$, $\alpha_1$ \\
 LA-Robust & Rolling-horizon PIRP & Budgeted uncertainty \citep{bertsimas2006robust} & $\Gamma$ \\
 ScenPO-SS & Rolling-horizon stochastic PIRP & Scenario PTO \citep{jia2025scenario} & -- (10 scenarios) \\
-LA-DFL & Rolling-horizon PIRP & Decision-focused targets (this paper) & Network weights, early stopping \\
+LA-DFL & Rolling-horizon PIRP & Decision-focused targets (this paper) & Network weights, early stopping, seed \\
 PI & Reference & Realised demand & -- \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{Decision-focused planning targets}\label{sec:dfl}
+\subsection{Decision-focused planning targets (LA-DFL)}\label{sec:dfl}
 
-LA-DFL keeps the deterministic lookahead, which is fast and easy to explain to planners, and learns how much each planning target should deviate from the forecast. For store $i$, planning day $t$ and offset $k$ the target is
+LA-DFL (proposed) keeps the deterministic lookahead, which is fast and easy to explain to planners, and learns how much each planning target should deviate from the forecast. For store $i$, planning day $t$ and offset $k$ the target is
 \begin{equation}\label{eq:target}
 \tilde d_{i,t+k}(\theta)=\Big(\hat Q_{\alpha^\star}(D_{i,t+k}\mid\xi)+\hat\sigma_{i,t+k}\,\delta_\theta(\phi_{itk})\Big)^{+},
 \end{equation}
@@ -67,7 +85,7 @@ whose last factor is the marginal value of a delivery bounded in Proposition~\re
 
 \paragraph{Training.} Training states are the decision epochs visited by the tuned LA-Quantile policy on training episodes. Each epoch re-solves the MILP at the current targets to refresh the visit patterns (a form of solution caching, \citealp{mulamba2021contrastive}), takes Adam steps on the average realised cost of minibatches, and evaluates the closed-loop cost of the current network on the validation episodes; the network with the lowest validation cost is kept, which may be the LA-Quantile starting point. Algorithm~\ref{alg:dfl} summarises the procedure.
 
-\begin{algorithm}[t]
+\begin{algorithm}[H]
 \caption{Training of decision-focused planning targets (LA-DFL)}\label{alg:dfl}
 \small
 \begin{algorithmic}[1]
@@ -85,4 +103,4 @@ whose last factor is the marginal value of a delivery bounded in Proposition~\re
 \end{algorithmic}
 \end{algorithm}
 
-Compared with the decision-focused learner of the original submission, three changes are essential. The learner no longer differentiates a heuristic surrogate of a MILP that was in practice never solved; the MILP is solved to a proven gap and only supplies visit patterns. The loss is the realised physical cost rather than regret against a heuristic full-information plan. And training and model selection are performed on the closed-loop system that is evaluated.
+The two learners differ in what the gradient sees. LA-DFL learns from the $H$-day cost of one plan with the visit pattern chosen by the MILP, so it can only correct the plan's targets; UL-DFL learns from the cost of whole episodes, so it can trade today's order against tomorrow's carried stock and waste, but it keeps the rule's simple visit trigger. LA-DFL needs an MILP solve per training state and epoch; UL-DFL needs none. Compared with the decision-focused learner of the original submission, three changes are essential. The learner no longer differentiates a heuristic surrogate of a MILP that was in practice never solved; the MILP is solved to a proven gap and only supplies visit patterns. The loss is the realised physical cost rather than regret against a heuristic full-information plan. And training and model selection are performed on the closed-loop system that is evaluated.
